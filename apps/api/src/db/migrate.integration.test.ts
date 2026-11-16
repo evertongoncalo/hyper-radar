@@ -1,10 +1,7 @@
-import { randomBytes } from 'node:crypto';
 import { eq, sql } from 'drizzle-orm';
-import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { criarDb } from './client';
-import { aplicarMigracoes } from './migrate';
 import { settings } from './schema';
+import { codigoErro, criarSchemaIsolado, prepararBaseTeste } from './teste-pg';
 import { resolverUrlTeste } from './url-teste';
 
 /**
@@ -14,69 +11,17 @@ import { resolverUrlTeste } from './url-teste';
  */
 const urlTeste = resolverUrlTeste();
 
-/** Verifica se o Postgres responde; cria a base de testes se ainda não existir. */
-async function prepararBaseTeste(url: string): Promise<boolean> {
-  const opcoes = { max: 1, connect_timeout: 3, onnotice: () => {} };
-  const sondar = async (u: string) => {
-    const cliente = postgres(u, opcoes);
-    try {
-      await cliente`select 1`;
-    } finally {
-      await cliente.end({ timeout: 1 });
-    }
-  };
-
-  try {
-    await sondar(url);
-    return true;
-  } catch (erro) {
-    // 3D000 = a base não existe: criá-la a partir da base de manutenção `postgres`.
-    if ((erro as { code?: string }).code !== '3D000') return false;
-  }
-
-  const alvo = new URL(url);
-  const nomeBase = decodeURIComponent(alvo.pathname.slice(1));
-  alvo.pathname = '/postgres';
-  const admin = postgres(alvo.toString(), opcoes);
-  try {
-    await admin.unsafe(`create database "${nomeBase.replaceAll('"', '""')}"`);
-    return true;
-  } catch {
-    return false;
-  } finally {
-    await admin.end({ timeout: 1 });
-  }
-}
-
 const disponivel = await prepararBaseTeste(urlTeste);
 if (!disponivel) {
   console.warn(`[db] Postgres de testes inacessível; testes de integração ignorados.`);
 }
 
-/** Devolve o código SQLSTATE do erro lançado pela promessa (o Drizzle embrulha-o em `cause`). */
-async function codigoErro(promessa: Promise<unknown>): Promise<string | undefined> {
-  try {
-    await promessa;
-  } catch (erro) {
-    const e = erro as { code?: string; cause?: { code?: string } };
-    return e.cause?.code ?? e.code;
-  }
-  return undefined;
-}
-
 describe.skipIf(!disponivel)('migrações (Postgres real)', () => {
-  const schema = `teste_${randomBytes(6).toString('hex')}`;
-  const { db, fechar } = criarDb(urlTeste, { max: 1, connection: { search_path: schema } });
+  const isolado = criarSchemaIsolado(urlTeste);
+  const { db, schema } = isolado;
 
-  beforeAll(async () => {
-    await db.execute(sql.raw(`create schema "${schema}"`));
-    await aplicarMigracoes(db, { migrationsSchema: schema });
-  });
-
-  afterAll(async () => {
-    await db.execute(sql.raw(`drop schema if exists "${schema}" cascade`));
-    await fechar();
-  });
+  beforeAll(() => isolado.preparar());
+  afterAll(() => isolado.limpar());
 
   it('cria a tabela settings no schema isolado', async () => {
     const linhas = await db.execute<{ table_name: string }>(
@@ -87,7 +32,7 @@ describe.skipIf(!disponivel)('migrações (Postgres real)', () => {
   });
 
   it('é idempotente', async () => {
-    await expect(aplicarMigracoes(db, { migrationsSchema: schema })).resolves.toBeUndefined();
+    await expect(isolado.migrar()).resolves.toBeUndefined();
   });
 
   it('insere a linha única com as omissões', async () => {

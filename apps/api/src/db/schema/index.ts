@@ -1,6 +1,13 @@
 import { sql } from 'drizzle-orm';
 import { check, integer, numeric, pgTable, timestamp } from 'drizzle-orm/pg-core';
 
+// Restantes tabelas da secção 10, organizadas por domínio.
+export * from './comum';
+export * from './carteiras';
+export * from './analise';
+export * from './eventos';
+export * from './ia';
+
 /**
  * Definições do utilizador (secção 10 da especificação). Tabela de linha única:
  * o `id` está fixo em 1 por constraint, para nunca haver duas linhas de definições.

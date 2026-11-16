@@ -23,7 +23,8 @@
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "db:generate": "npm run db:generate -w @hyper-radar/api",
-    "db:migrate": "npm run db:migrate -w @hyper-radar/api"
+    "db:migrate": "npm run db:migrate -w @hyper-radar/api",
+    "db:seed": "npm run db:seed -w @hyper-radar/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
