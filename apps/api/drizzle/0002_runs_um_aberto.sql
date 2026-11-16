@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "analysis_runs_one_open_per_asset" ON "analysis_runs" USING btree ("asset_id") WHERE "analysis_runs"."ended_at" is null;

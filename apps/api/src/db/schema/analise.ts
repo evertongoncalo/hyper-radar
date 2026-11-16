@@ -29,6 +29,10 @@ export const analysisRuns = pgTable(
   },
   (t) => [
     index('analysis_runs_asset_started_idx').on(t.assetId, t.startedAt),
+    // No máximo um run em curso por ativo (garantido pela BD, mesmo com escritas concorrentes).
+    uniqueIndex('analysis_runs_one_open_per_asset')
+      .on(t.assetId)
+      .where(sql`${t.endedAt} is null`),
     check(
       'analysis_runs_end_after_start',
       sql`${t.endedAt} is null or ${t.endedAt} >= ${t.startedAt}`,
