@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+/* A aplicação tem apenas tema escuro: não existe modo claro nem alternador. */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply min-h-screen bg-neutral-950 text-neutral-100 antialiased;
+}

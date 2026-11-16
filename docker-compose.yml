@@ -1,0 +1,25 @@
+# Postgres local para desenvolvimento do HyperRadar.
+# Credenciais apenas de desenvolvimento; a porta só é publicada em 127.0.0.1.
+name: hyper-radar
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hyperradar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hyperradar}
+      POSTGRES_DB: ${POSTGRES_DB:-hyperradar}
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-dados:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  postgres-dados:
