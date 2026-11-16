@@ -1,0 +1,71 @@
+[
+  {
+    "coin": "xyz:NVDA",
+    "px": "161.05",
+    "sz": "6.021",
+    "side": "B",
+    "time": 1794840418199,
+    "startPosition": "975.374",
+    "dir": "Open Long",
+    "closedPnl": "0.0",
+    "oid": 607111994668,
+    "crossed": false,
+    "fee": "0.02909",
+    "tid": 626493084472256,
+    "feeToken": "USDC",
+    "twapId": null
+  },
+  {
+    "coin": "xyz:NVDA",
+    "px": "161.05",
+    "sz": "46.5",
+    "side": "B",
+    "time": 1794840417996,
+    "startPosition": "928.874",
+    "dir": "Open Long",
+    "closedPnl": "0.0",
+    "oid": 607111994668,
+    "crossed": false,
+    "fee": "0.224664",
+    "tid": 129829436682649,
+    "feeToken": "USDC",
+    "twapId": null
+  },
+  {
+    "coin": "xyz:NVDA",
+    "px": "161.05",
+    "sz": "0.773",
+    "side": "B",
+    "time": 1794840416994,
+    "startPosition": "928.101",
+    "dir": "Open Long",
+    "closedPnl": "0.0",
+    "oid": 607111994668,
+    "crossed": false,
+    "fee": "0.003734",
+    "tid": 319884120282414,
+    "feeToken": "USDC",
+    "twapId": null
+  },
+  {
+    "coin": "xyz:NVDA",
+    "px": "168.0",
+    "sz": "285.006",
+    "side": "B",
+    "time": 1794434406779,
+    "startPosition": "1124.939",
+    "dir": "Open Long",
+    "closedPnl": "0.0",
+    "oid": 601917542646,
+    "crossed": false,
+    "fee": "1.43643",
+    "tid": 796700227832509,
+    "liquidation": {
+      "liquidatedUser": "0xffffffffffffffffffffffffffffffffffff0013",
+      "markPx": "168.0",
+      "method": "market"
+    },
+    "feeToken": "USDC",
+    "twapId": null
+  }
+]

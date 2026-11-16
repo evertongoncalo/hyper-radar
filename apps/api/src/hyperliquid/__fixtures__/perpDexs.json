@@ -1,0 +1,58 @@
+[
+  null,
+  {
+    "name": "xyz",
+    "fullName": "XYZ",
+    "deployer": "0xffffffffffffffffffffffffffffffffffff0003",
+    "oracleUpdater": null,
+    "feeRecipient": "0xffffffffffffffffffffffffffffffffffff0004",
+    "assetToStreamingOiCap": [
+      ["xyz:AAOI", "25000000.0"],
+      ["xyz:AAPL", "200000000.0"]
+    ],
+    "subDeployers": [
+      [
+        "registerAsset",
+        [
+          "0xffffffffffffffffffffffffffffffffffff0005",
+          "0xffffffffffffffffffffffffffffffffffff0006",
+          "0xffffffffffffffffffffffffffffffffffff0007"
+        ]
+      ],
+      ["setOracle", ["0xffffffffffffffffffffffffffffffffffff0008"]]
+    ],
+    "assetToFundingMultiplier": [
+      ["xyz:AAOI", "0.5"],
+      ["xyz:AAPL", "0.5"]
+    ],
+    "assetToFundingInterestRate": [
+      ["xyz:EUR", "0.0"],
+      ["xyz:GBP", "0.0"]
+    ],
+    "assetToFundingClamp": []
+  },
+  {
+    "name": "flx",
+    "fullName": "Felix Exchange",
+    "deployer": "0xffffffffffffffffffffffffffffffffffff0009",
+    "oracleUpdater": "0xffffffffffffffffffffffffffffffffffff0010",
+    "feeRecipient": "0xffffffffffffffffffffffffffffffffffff0011",
+    "assetToStreamingOiCap": [
+      ["flx:COIN", "8000000.0"],
+      ["flx:COPPER", "5000000.0"]
+    ],
+    "subDeployers": [
+      ["registerAsset", ["0xffffffffffffffffffffffffffffffffffff0012"]],
+      [
+        "setOracle",
+        ["0xffffffffffffffffffffffffffffffffffff0010", "0xffffffffffffffffffffffffffffffffffff0012"]
+      ]
+    ],
+    "assetToFundingMultiplier": [
+      ["flx:COIN", "0.0"],
+      ["flx:COPPER", "0.0"]
+    ],
+    "assetToFundingInterestRate": [],
+    "assetToFundingClamp": []
+  }
+]

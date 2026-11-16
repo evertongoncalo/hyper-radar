@@ -1,0 +1,50 @@
+[
+  {
+    "coin": "xyz:XYZ100",
+    "px": "28057.0",
+    "sz": "0.7541",
+    "side": "A",
+    "time": 1794784919020,
+    "startPosition": "4.5405",
+    "dir": "Close Long",
+    "closedPnl": "371.688349",
+    "oid": 606412937911,
+    "crossed": true,
+    "fee": "1.692622",
+    "tid": 901010362355385,
+    "feeToken": "USDC",
+    "twapId": null
+  },
+  {
+    "coin": "xyz:XYZ100",
+    "px": "28057.0",
+    "sz": "1.5161",
+    "side": "A",
+    "time": 1794784919020,
+    "startPosition": "3.7864",
+    "dir": "Close Long",
+    "closedPnl": "747.270529",
+    "oid": 606412937911,
+    "crossed": true,
+    "fee": "3.402977",
+    "tid": 308346800118082,
+    "feeToken": "USDC",
+    "twapId": null
+  },
+  {
+    "coin": "xyz:XYZ100",
+    "px": "28052.0",
+    "sz": "0.0356",
+    "side": "A",
+    "time": 1794784939420,
+    "startPosition": "2.2703",
+    "dir": "Close Long",
+    "closedPnl": "17.368884",
+    "oid": 606413132411,
+    "crossed": true,
+    "fee": "0.079892",
+    "tid": 624567022534897,
+    "feeToken": "USDC",
+    "twapId": null
+  }
+]

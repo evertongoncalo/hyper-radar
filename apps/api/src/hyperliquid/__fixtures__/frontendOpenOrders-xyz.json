@@ -1,0 +1,20 @@
+[
+  {
+    "coin": "xyz:NVDA",
+    "side": "A",
+    "limitPx": "180.05",
+    "sz": "1252.283",
+    "oid": 607387623509,
+    "timestamp": 1794857475417,
+    "triggerCondition": "N/A",
+    "isTrigger": false,
+    "triggerPx": "0.0",
+    "children": [],
+    "isPositionTpsl": false,
+    "reduceOnly": true,
+    "orderType": "Limit",
+    "origSz": "1252.283",
+    "tif": "Gtc",
+    "cloid": null
+  }
+]

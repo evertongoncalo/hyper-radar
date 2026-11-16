@@ -1,0 +1,38 @@
+[
+  {
+    "coin": "BTC",
+    "side": "B",
+    "limitPx": "72380.0",
+    "sz": "0.0",
+    "oid": 607513776445,
+    "timestamp": 1794869760075,
+    "triggerCondition": "Price above 65800",
+    "isTrigger": true,
+    "triggerPx": "65800.0",
+    "children": [],
+    "isPositionTpsl": true,
+    "reduceOnly": true,
+    "orderType": "Stop Market",
+    "origSz": "0.0",
+    "tif": null,
+    "cloid": null
+  },
+  {
+    "coin": "BTC",
+    "side": "B",
+    "limitPx": "63470.0",
+    "sz": "0.0",
+    "oid": 607482511746,
+    "timestamp": 1794865953106,
+    "triggerCondition": "Price below 57700",
+    "isTrigger": true,
+    "triggerPx": "57700.0",
+    "children": [],
+    "isPositionTpsl": true,
+    "reduceOnly": true,
+    "orderType": "Take Profit Market",
+    "origSz": "0.0",
+    "tif": null,
+    "cloid": null
+  }
+]

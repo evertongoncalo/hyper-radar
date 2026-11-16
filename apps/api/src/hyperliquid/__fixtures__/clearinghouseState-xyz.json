@@ -1,0 +1,43 @@
+{
+  "marginSummary": {
+    "accountValue": "40806.214439",
+    "totalNtlPos": "227156.48505",
+    "totalRawUsd": "-186350.270611",
+    "totalMarginUsed": "40806.214439"
+  },
+  "crossMarginSummary": {
+    "accountValue": "0.0",
+    "totalNtlPos": "0.0",
+    "totalRawUsd": "0.0",
+    "totalMarginUsed": "0.0"
+  },
+  "crossMaintenanceMarginUsed": "0.0",
+  "withdrawable": "0.0",
+  "assetPositions": [
+    {
+      "type": "oneWay",
+      "position": {
+        "coin": "xyz:NVDA",
+        "szi": "1456.785",
+        "leverage": {
+          "type": "isolated",
+          "value": 5,
+          "rawUsd": "-186350.270611"
+        },
+        "entryPx": "159.859",
+        "positionValue": "227156.48505",
+        "unrealizedPnl": "-5724.8558",
+        "returnOnEquity": "-0.1229135786",
+        "liquidationPx": "134.6514273489",
+        "marginUsed": "40806.214439",
+        "maxLeverage": 10,
+        "cumFunding": {
+          "allTime": "689.589719",
+          "sinceOpen": "52.436151",
+          "sinceChange": "0.0"
+        }
+      }
+    }
+  ],
+  "time": 1794870332332
+}
