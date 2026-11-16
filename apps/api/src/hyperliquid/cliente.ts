@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { CacheCurta } from './cache';
 import { Circuito, type EstadoCircuito } from './circuito';
 import {
+  ErroCircuitoAberto,
   ErroHyperliquid,
   ErroLimiteTaxa,
   ErroParametroInvalido,
@@ -291,15 +292,18 @@ export class ClienteHyperliquid {
     for (let tentativa = 1; ; tentativa++) {
       this.circuito.autorizar();
       try {
-        const dados = await this.fila.executar(PESOS_INFO[tipo], () =>
-          enviarInfo(this.transporte, corpo),
-        );
+        const dados = await this.fila.executar(PESOS_INFO[tipo], () => {
+          // O circuito pode ter aberto enquanto o pedido esperava na fila.
+          this.circuito.verificarAberto();
+          return enviarInfo(this.transporte, corpo);
+        });
         this.circuito.registarSucesso();
         if (TIPOS_COM_PESO_POR_ITEM.has(tipo) && Array.isArray(dados)) {
           this.fila.acrescentarPeso(Math.floor(dados.length / 20));
         }
         return dados;
       } catch (causa) {
+        if (causa instanceof ErroCircuitoAberto) throw causa;
         const erro = causa instanceof ErroHyperliquid ? causa : new ErroRede(causa);
         // Erros não repetíveis (4xx, JSON inválido) provam que o servidor está a responder.
         if (erro.repetivel) this.circuito.registarFalha();

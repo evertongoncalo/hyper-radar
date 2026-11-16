@@ -56,11 +56,14 @@ const contextoAtivoSchema = z.object({
   dayBaseVlm: decimalHlSchema.optional(),
 });
 
-/** `metaAndAssetCtxs`: `[meta, contextos]`, com os contextos pela mesma ordem de `universe`. */
-export const metaAndAssetCtxsRespostaSchema = z.tuple([
-  metaRespostaSchema,
-  z.array(contextoAtivoSchema),
-]);
+/**
+ * `metaAndAssetCtxs`: `[meta, contextos]`, com os contextos pela mesma ordem de `universe`.
+ * Elementos adicionais no fim do tuplo (futuras extensões da API) são tolerados.
+ */
+export const metaAndAssetCtxsRespostaSchema = z.tuple(
+  [metaRespostaSchema, z.array(contextoAtivoSchema)],
+  z.unknown(),
+);
 
 /** `allMids`: mapa `coin → preço médio`. */
 export const allMidsRespostaSchema = z.record(z.string(), decimalHlSchema);

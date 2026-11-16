@@ -34,6 +34,15 @@ export class Circuito {
       this.testeEmCurso = true;
       return;
     }
+    this.lancarAberto();
+  }
+
+  /** Lança `ErroCircuitoAberto` se estiver aberto, sem consumir o pedido de teste. */
+  verificarAberto(): void {
+    if (this.estado === 'aberto') this.lancarAberto();
+  }
+
+  private lancarAberto(): never {
     const decorrido = this.opcoes.relogio.agora() - this.abertoEm!;
     throw new ErroCircuitoAberto(Math.max(0, this.opcoes.intervaloMeioAbertoMs - decorrido));
   }

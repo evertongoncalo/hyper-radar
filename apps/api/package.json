@@ -10,6 +10,7 @@
     "build": "tsdown",
     "start": "node --env-file-if-exists=../../.env dist/index.js",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=../../.env src/db/migrate.ts",

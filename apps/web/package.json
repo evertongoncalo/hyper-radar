@@ -9,6 +9,7 @@
     "dev": "vite",
     "build": "vite build",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
