@@ -126,17 +126,31 @@ export function inicioBucket(instante: number, bucketMs: number): number {
 }
 
 /**
- * Chave de deduplicação determinística: carteira + ativo + tipo + início do bucket que contém o
- * início da janela do evento. Separador `|` porque os tickers HIP-3 contêm `:`.
+ * Tipos emitidos de imediato (sem janela): a chave usa o instante exato do snapshot, para que
+ * abrir → fechar → reabrir dentro do mesmo bucket não perca o segundo evento. Reprocessar o
+ * mesmo snapshot dá a mesma chave (idempotente).
+ */
+export const TIPOS_IMEDIATOS: ReadonlySet<TipoEvento> = new Set<TipoEvento>([
+  'OPENED',
+  'CLOSED',
+  'FLIPPED',
+  'LIQ_NEAR',
+]);
+
+/**
+ * Chave de deduplicação determinística: carteira + ativo + tipo + instante. Com `bucketMs`, o
+ * instante é o início do bucket que contém o início da janela do evento (tipos agregados); com
+ * `null`, é o instante exato. Separador `|` porque os tickers HIP-3 contêm `:`.
  */
 export function calcularChaveDedupe(
   carteira: string,
   ativo: string,
   tipo: TipoEvento,
   inicioJanela: number,
-  bucketMs: number,
+  bucketMs: number | null,
 ): string {
-  return [carteira.toLowerCase(), ativo, tipo, inicioBucket(inicioJanela, bucketMs)].join('|');
+  const marca = bucketMs === null ? inicioJanela : inicioBucket(inicioJanela, bucketMs);
+  return [carteira.toLowerCase(), ativo, tipo, marca].join('|');
 }
 
 export function criarEvento<K extends TipoEvento>(
@@ -145,6 +159,7 @@ export function criarEvento<K extends TipoEvento>(
   payload: PayloadsEvento[K],
   config: ConfigMotor,
 ): EventoMotor<K> {
+  const imediato = TIPOS_IMEDIATOS.has(tipo);
   const evento = {
     tipo,
     carteira: dados.carteira,
@@ -155,8 +170,8 @@ export function criarEvento<K extends TipoEvento>(
       dados.carteira,
       dados.ativo,
       tipo,
-      dados.inicioJanela ?? dados.instante,
-      config.bucketDedupeMs,
+      imediato ? dados.instante : (dados.inicioJanela ?? dados.instante),
+      imediato ? null : config.bucketDedupeMs,
     ),
   };
   return evento as EventoMotor<K>;

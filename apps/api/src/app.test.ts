@@ -14,6 +14,10 @@ describe('GET /health', () => {
     expect(resposta.statusCode).toBe(200);
     expect(resposta.json()).toEqual({ status: 'ok' });
   });
+
+  it('sem serviço de análise injetado, a decoração é null', () => {
+    expect(app.analise).toBeNull();
+  });
 });
 
 describe('carregarConfig', () => {
@@ -36,6 +40,16 @@ describe('carregarConfig', () => {
     expect(carregarConfig(base).DATABASE_URL).toBe(base.DATABASE_URL);
     const url = 'postgresql://u:s@localhost/base';
     expect(carregarConfig({ DATABASE_URL: url }).DATABASE_URL).toBe(url);
+  });
+
+  it('retenção de snapshots: omissão 30 dias, configurável e ≥ 1', () => {
+    expect(carregarConfig(base).SNAPSHOT_RETENTION_DAYS).toBe(30);
+    expect(carregarConfig({ ...base, SNAPSHOT_RETENTION_DAYS: '7' }).SNAPSHOT_RETENTION_DAYS).toBe(
+      7,
+    );
+    expect(() => carregarConfig({ ...base, SNAPSHOT_RETENTION_DAYS: '0' })).toThrow(
+      /SNAPSHOT_RETENTION_DAYS/,
+    );
   });
 
   it('exige DATABASE_URL', () => {

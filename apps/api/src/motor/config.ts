@@ -35,7 +35,11 @@ export const configMotorSchema = z
     toleranciaPrecoSltpPct: z.number().nonnegative().default(0.05),
     /** Tolerância relativa para comparar tamanhos/preços (ruído de vírgula flutuante). */
     toleranciaRelativa: z.number().nonnegative().max(1e-3).default(1e-9),
-    /** Duração do bucket temporal da chave de deduplicação (ms); omissão = janela de agregação. */
+    /**
+     * Duração do bucket temporal da chave de deduplicação dos tipos agregados (`INCREASED`,
+     * `REDUCED`, `SLTP_CHANGED`), em ms; omissão = janela de agregação. Os tipos imediatos usam o
+     * instante exato do snapshot.
+     */
     bucketDedupeMs: z.number().int().positive().optional(),
   })
   .strict()

@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { eventType } from '../db/schema/comum';
 import { CARTEIRA_A } from './__testes__/construtores';
 import { criarConfig } from './config';
-import { calcularChaveDedupe, criarEvento, inicioBucket, TIPOS_EVENTO } from './eventos';
+import {
+  calcularChaveDedupe,
+  criarEvento,
+  inicioBucket,
+  TIPOS_EVENTO,
+  TIPOS_IMEDIATOS,
+} from './eventos';
 
 describe('eventos', () => {
   it('os tipos coincidem com o enum event_type da BD', () => {
@@ -26,7 +32,35 @@ describe('eventos', () => {
     expect(calcularChaveDedupe(CARTEIRA_A, 'xyz:NVDA', 'CLOSED', 610_000, 300_000)).not.toBe(k);
   });
 
-  it('criarEvento usa o início da janela (ou o instante) para a chave', () => {
+  it('com bucket nulo a chave usa o instante exato', () => {
+    expect(calcularChaveDedupe(CARTEIRA_A, 'BTC', 'OPENED', 610_123, null)).toBe(
+      `${CARTEIRA_A}|BTC|OPENED|610123`,
+    );
+  });
+
+  it('tipos imediatos usam o instante exato; agregados usam o bucket do início da janela', () => {
+    const config = criarConfig({ bucketDedupeMs: 1_000 });
+    const payload = {
+      lado: null,
+      antes: [],
+      depois: [],
+      adicionadas: [],
+      removidas: [],
+      movidas: [],
+      ciclosConsolidados: 1,
+      inicioJanela: 2_100,
+    };
+    const dados = { carteira: CARTEIRA_A, ativo: 'BTC', instante: 5_500 };
+    expect(criarEvento('SLTP_CHANGED', dados, payload, config).chaveDedupe).toBe(
+      `${CARTEIRA_A}|BTC|SLTP_CHANGED|5000`,
+    );
+    expect(
+      criarEvento('SLTP_CHANGED', { ...dados, inicioJanela: 2_100 }, payload, config).chaveDedupe,
+    ).toBe(`${CARTEIRA_A}|BTC|SLTP_CHANGED|2000`);
+    expect([...TIPOS_IMEDIATOS].sort()).toEqual(['CLOSED', 'FLIPPED', 'LIQ_NEAR', 'OPENED']);
+  });
+
+  it('criarEvento de tipo imediato ignora o bucket e o início da janela', () => {
     const config = criarConfig({ bucketDedupeMs: 1_000 });
     const payload = {
       posicaoAnterior: {
@@ -45,10 +79,10 @@ describe('eventos', () => {
     };
     const dados = { carteira: CARTEIRA_A, ativo: 'BTC', instante: 5_500 };
     expect(criarEvento('CLOSED', dados, payload, config).chaveDedupe).toBe(
-      `${CARTEIRA_A}|BTC|CLOSED|5000`,
+      `${CARTEIRA_A}|BTC|CLOSED|5500`,
     );
     expect(criarEvento('CLOSED', { ...dados, inicioJanela: 2_100 }, payload, config)).toMatchObject(
-      { tipo: 'CLOSED', instante: 5_500, chaveDedupe: `${CARTEIRA_A}|BTC|CLOSED|2000` },
+      { tipo: 'CLOSED', instante: 5_500, chaveDedupe: `${CARTEIRA_A}|BTC|CLOSED|5500` },
     );
   });
 });

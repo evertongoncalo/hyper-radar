@@ -140,7 +140,7 @@ describe('OPENED / CLOSED / FLIPPED (imediatos, com notional mínimo)', () => {
         protecoes: [{ tipo: 'SL', triggerPx: 90, tamanho: null }],
         precoMercado: 100,
       },
-      chaveDedupe: `${CARTEIRA_A}|${ATIVO}|OPENED|${Math.floor((T0 + MINUTO) / 300_000) * 300_000}`,
+      chaveDedupe: `${CARTEIRA_A}|${ATIVO}|OPENED|${T0 + MINUTO}`,
     });
     expect(eventos[1]).toMatchObject({
       tipo: 'CLOSED',
@@ -489,10 +489,17 @@ describe('deduplicação', () => {
     );
   });
 
-  it('o mesmo tipo dentro do mesmo bucket partilha a chave (gravado uma só vez)', () => {
+  it('abrir → fechar → reabrir no mesmo bucket dá chaves distintas (nenhum OPENED perdido)', () => {
     const { eventos } = correr(serie([null, long(100), null, long(100)], 10_000));
     const abertos = eventos.filter((e) => e.tipo === 'OPENED');
     expect(abertos).toHaveLength(2);
-    expect(abertos[0]!.chaveDedupe).toBe(abertos[1]!.chaveDedupe);
+    expect(abertos[0]!.chaveDedupe).not.toBe(abertos[1]!.chaveDedupe);
+    expect(abertos[0]!.chaveDedupe).toBe(`${CARTEIRA_A}|${ATIVO}|OPENED|${T0 + 10_000}`);
+    expect(abertos[1]!.chaveDedupe).toBe(`${CARTEIRA_A}|${ATIVO}|OPENED|${T0 + 30_000}`);
+  });
+
+  it('reprocessar o mesmo snapshot dá a mesma chave imediata', () => {
+    const seq = serie([null, long(100)]);
+    expect(correr(seq).eventos[0]!.chaveDedupe).toBe(correr(seq).eventos[0]!.chaveDedupe);
   });
 });

@@ -9,6 +9,8 @@ const configSchema = z.object({
     protocol: /^postgres(ql)?$/,
     error: 'DATABASE_URL tem de ser um URL postgres:// ou postgresql://',
   }),
+  // Dias de retenção dos snapshots (eventos e relatórios IA não são apagados).
+  SNAPSHOT_RETENTION_DAYS: z.coerce.number().int().min(1).default(30),
 });
 
 export type Config = z.infer<typeof configSchema>;
