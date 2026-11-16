@@ -17,6 +17,21 @@ jobs:
   verificar:
     name: Lint, formatação, tipos, testes e build
     runs-on: ubuntu-latest
+    # Postgres descartável para os testes de integração das migrações.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: hyperradar
+          POSTGRES_PASSWORD: hyperradar
+          POSTGRES_DB: hyperradar_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hyperradar -d hyperradar_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
 
@@ -39,6 +54,8 @@ jobs:
 
       - name: Testes
         run: npm test
+        env:
+          TEST_DATABASE_URL: postgres://hyperradar:hyperradar@127.0.0.1:5432/hyperradar_test
 
       - name: Build
         run: npm run build

@@ -1,0 +1,124 @@
+{
+  "id": "58bf511a-533f-4a72-9184-01660af8e5bf",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.settings": {
+      "name": "settings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "default": 1
+        },
+        "capital_usd": {
+          "name": "capital_usd",
+          "type": "numeric(20, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "max_leverage": {
+          "name": "max_leverage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 5
+        },
+        "risk_per_trade_pct": {
+          "name": "risk_per_trade_pct",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'1.00'"
+        },
+        "poll_interval_seconds": {
+          "name": "poll_interval_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 60
+        },
+        "ai_daily_call_limit": {
+          "name": "ai_daily_call_limit",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 10
+        },
+        "ai_daily_token_limit": {
+          "name": "ai_daily_token_limit",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 200000
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "settings_single_row": {
+          "name": "settings_single_row",
+          "value": "\"settings\".\"id\" = 1"
+        },
+        "settings_capital_non_negative": {
+          "name": "settings_capital_non_negative",
+          "value": "\"settings\".\"capital_usd\" >= 0"
+        },
+        "settings_max_leverage_range": {
+          "name": "settings_max_leverage_range",
+          "value": "\"settings\".\"max_leverage\" between 1 and 100"
+        },
+        "settings_risk_pct_range": {
+          "name": "settings_risk_pct_range",
+          "value": "\"settings\".\"risk_per_trade_pct\" > 0 and \"settings\".\"risk_per_trade_pct\" <= 100"
+        },
+        "settings_poll_interval_min": {
+          "name": "settings_poll_interval_min",
+          "value": "\"settings\".\"poll_interval_seconds\" >= 15"
+        },
+        "settings_ai_call_limit_non_negative": {
+          "name": "settings_ai_call_limit_non_negative",
+          "value": "\"settings\".\"ai_daily_call_limit\" >= 0"
+        },
+        "settings_ai_token_limit_non_negative": {
+          "name": "settings_ai_token_limit_non_negative",
+          "value": "\"settings\".\"ai_daily_token_limit\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

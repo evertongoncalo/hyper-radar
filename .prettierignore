@@ -3,5 +3,7 @@ dist/
 build/
 coverage/
 package-lock.json
+# Migrações e snapshots gerados pelo drizzle-kit
+apps/api/drizzle/
 .claude/
 CLAUDE.md

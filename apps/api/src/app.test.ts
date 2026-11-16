@@ -17,15 +17,35 @@ describe('GET /health', () => {
 });
 
 describe('carregarConfig', () => {
+  // Valor fictício: a validação da configuração não abre ligações.
+  const base = { DATABASE_URL: 'postgres://utilizador:senha@127.0.0.1:5432/base' };
+
   it('usa a porta 3000 por omissão', () => {
-    expect(carregarConfig({}).PORT).toBe(3000);
+    expect(carregarConfig(base).PORT).toBe(3000);
   });
 
   it('lê a porta definida em PORT', () => {
-    expect(carregarConfig({ PORT: '4123' }).PORT).toBe(4123);
+    expect(carregarConfig({ ...base, PORT: '4123' }).PORT).toBe(4123);
   });
 
   it('rejeita uma porta inválida', () => {
-    expect(() => carregarConfig({ PORT: 'abc' })).toThrow(/Configuração inválida/);
+    expect(() => carregarConfig({ ...base, PORT: 'abc' })).toThrow(/Configuração inválida/);
   });
+
+  it('aceita DATABASE_URL com postgres:// e postgresql://', () => {
+    expect(carregarConfig(base).DATABASE_URL).toBe(base.DATABASE_URL);
+    const url = 'postgresql://u:s@localhost/base';
+    expect(carregarConfig({ DATABASE_URL: url }).DATABASE_URL).toBe(url);
+  });
+
+  it('exige DATABASE_URL', () => {
+    expect(() => carregarConfig({})).toThrow(/DATABASE_URL/);
+  });
+
+  it.each(['mysql://u:s@localhost/base', 'http://localhost:5432', 'não é um url', ''])(
+    'rejeita DATABASE_URL inválido: %j',
+    (valor) => {
+      expect(() => carregarConfig({ DATABASE_URL: valor })).toThrow(/DATABASE_URL/);
+    },
+  );
 });
