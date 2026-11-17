@@ -398,6 +398,18 @@ export function calcularSugestao(e: EntradaSugestao): SugestaoProporcionalDto {
       );
     }
   }
+  // SL para lá da liquidação estimada: a liquidação dispara primeiro e a perda real é a margem.
+  if (
+    sl.nivel &&
+    liquidacaoEstimada !== null &&
+    (lado === 'long' ? liquidacaoEstimada >= sl.nivel.preco : liquidacaoEstimada <= sl.nivel.preco)
+  ) {
+    avisar(
+      'SL_APOS_LIQUIDACAO',
+      'critico',
+      `A liquidação estimada (${fmt(liquidacaoEstimada)}) é atingida antes do SL (${fmt(sl.nivel.preco)}): o SL não protege e a perda real será a margem (${fmt(margemUsd)} USD). Reduza a alavancagem.`,
+    );
+  }
   if (!tp.nivel) {
     avisar('SEM_TAKE_PROFIT', 'atencao', 'A baleia não tem TP visível na exchange.');
   }

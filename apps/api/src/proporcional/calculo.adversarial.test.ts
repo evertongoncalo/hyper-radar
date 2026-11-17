@@ -278,6 +278,7 @@ describe('casos conferidos à mão', () => {
     expect(r.posicao?.liquidacaoEstimada).toBeCloseTo(59240.5063291, 6);
     expect(r.posicao?.perdaAteStopUsd).toBeCloseTo(19.992, 9);
     expect(r.posicao?.liquidacaoEstimada ?? 0).toBeGreaterThan(r.posicao?.stopLoss?.preco ?? 0);
+    expect(r.avisos.find((a) => a.codigo === 'SL_APOS_LIQUIDACAO')?.nivel).toBe('critico');
   });
 
   it('8. BTC com preço mid fora do tick (65454,5): o preço de entrada sugerido é válido', () => {
