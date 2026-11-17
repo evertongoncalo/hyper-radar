@@ -46,6 +46,9 @@ export interface SnapshotCompleto {
   walletId: number;
   assetId: number;
   accountValue: number;
+  /** `false` em conta unificada / margem de portfólio (ver schema). */
+  accountValueRepresentativo: boolean;
+  modoConta: string | null;
   marketPx: number | null;
   instante: Date;
   posicao: PosicaoGravada | null;
@@ -56,6 +59,9 @@ export interface NovoSnapshot {
   runId: number;
   walletId: number;
   accountValue: number;
+  /** Omissão `true` (contas normais). */
+  accountValueRepresentativo?: boolean;
+  modoConta?: string | null;
   marketPx: number | null;
   /** Instante do ciclo; por omissão `now()` da BD. */
   instante?: Date;
@@ -94,6 +100,8 @@ function montar(s: Snapshot, posicao: Position | undefined, ordens: Order[]): Sn
     walletId: s.walletId,
     assetId: s.assetId,
     accountValue: decimalParaNumero(s.accountValue),
+    accountValueRepresentativo: s.accountValueRepresentative,
+    modoConta: s.accountMode,
     marketPx: decimalOuNuloParaNumero(s.marketPx),
     instante: s.takenAt,
     posicao: posicao ? paraPosicao(posicao) : null,
@@ -145,6 +153,8 @@ export async function gravarSnapshot(db: Executor, novo: NovoSnapshot): Promise<
           walletId: novo.walletId,
           assetId: run.assetId,
           accountValue: numeroParaDecimal(novo.accountValue),
+          accountValueRepresentative: novo.accountValueRepresentativo ?? true,
+          accountMode: novo.modoConta ?? null,
           marketPx: numeroOuNuloParaDecimal(novo.marketPx),
           ...(novo.instante ? { takenAt: novo.instante } : {}),
         })

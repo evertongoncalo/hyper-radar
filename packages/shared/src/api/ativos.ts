@@ -77,9 +77,11 @@ export const ultimoSnapshotDtoSchema = z.object({
   accountValue: z.number(),
   /**
    * `false` em conta unificada / margem de portfólio (o `accountValue` por DEX não representa o
-   * saldo real); `null` quando não é conhecido.
+   * saldo real). A API grava-o em cada snapshot; `null` mantém-se por compatibilidade.
    */
   accountValueRepresentativo: z.boolean().nullable(),
+  /** Modo da conta na Hyperliquid (`userAbstraction`); `null` se desconhecido. */
+  modoConta: z.string().nullable(),
   precoMercado: z.number().nullable(),
   posicao: posicaoDtoSchema.nullable(),
   /** Só SL/TP colocados na exchange (stops geridos fora dela são invisíveis). */

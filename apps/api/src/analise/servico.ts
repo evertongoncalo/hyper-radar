@@ -18,6 +18,7 @@ import {
 import {
   abrirRun,
   alterarEstadoAtivo,
+  apagarAtivo,
   apagarSnapshotsAnterioresA,
   ErroNaoEncontrado,
   fecharRun,
@@ -161,6 +162,30 @@ export class ServicoAnalise {
       // Sem ciclos neste processo (ex.: antes da retoma), fecha o run que estiver aberto.
       const runId = ex?.runId ?? (await obterRunAtivo(this.db, assetId))?.id ?? null;
       return this.pararNaBd(ativo, runId);
+    });
+  }
+
+  /**
+   * Apaga o ativo dentro da serialização por ativo: pára os ciclos, espera o ciclo em curso,
+   * fecha o run e apaga o ativo (numa transação). Qualquer transição posterior para este id
+   * (ex.: `iniciar`) encontra-o inexistente e falha com `ErroNaoEncontrado`.
+   */
+  removerAtivo(assetId: number): Promise<void> {
+    return this.exclusivo(assetId, async () => {
+      const ativo = await this.obterAtivo(assetId);
+      const ex = this.execucoes.get(assetId);
+      if (ex) await this.desativar(ex);
+      const runId = ex?.runId ?? (await obterRunAtivo(this.db, assetId))?.id ?? null;
+      const apagado = await this.db.transaction(async (tx) => {
+        if (runId !== null) await fecharRun(tx, runId);
+        return apagarAtivo(tx, assetId);
+      });
+      this.execucoes.delete(assetId);
+      if (!apagado) throw new ErroNaoEncontrado('Ativo', assetId);
+      this.logger.info({ assetId, runId }, 'Ativo apagado');
+      if (ex || ativo.estado === 'running' || ativo.estado === 'restarting') {
+        this.publicarEstado({ ...ativo, estado: 'stopped' }, ativo.estado, null);
+      }
     });
   }
 
@@ -541,7 +566,7 @@ export class ServicoAnalise {
     if (this.encerrado) throw new ErroServicoEncerrado();
   }
 
-  /** Serializa as transições de um mesmo ativo (iniciar/parar/reiniciar/retomar). */
+  /** Serializa as transições de um mesmo ativo (iniciar/parar/reiniciar/retomar/remover). */
   private exclusivo<T>(assetId: number, operacao: () => Promise<T>): Promise<T> {
     const anterior = this.filas.get(assetId) ?? Promise.resolve();
     const atual = anterior.then(operacao);

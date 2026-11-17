@@ -134,8 +134,25 @@ describe.skipIf(!disponivel)('repositórios de runs e snapshots (Postgres real)'
       expect(lido).toEqual(gravado);
       expect(lido).toMatchObject({
         accountValue: 1_234_567.12345678,
+        // Omissão: conta normal, modo desconhecido.
+        accountValueRepresentativo: true,
+        modoConta: null,
         marketPx: 0.000012345678,
         posicao,
+      });
+
+      const unificada = await gravarSnapshot(
+        db,
+        novo(run.id, carteira.id, {
+          accountValueRepresentativo: false,
+          modoConta: 'portfolioMargin',
+          instante: new Date(Date.now() + 60_000),
+        }),
+      );
+      expect(await ultimoSnapshot(db, run.id, carteira.id)).toEqual(unificada);
+      expect(unificada).toMatchObject({
+        accountValueRepresentativo: false,
+        modoConta: 'portfolioMargin',
       });
       expect(lido?.ordens).toEqual([
         { tipo: 'SL', triggerPx: 0.0000140123456, tamanho: null, reduceOnly: true, oid: 1 },

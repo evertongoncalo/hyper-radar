@@ -71,8 +71,8 @@ export function paraUltimoSnapshotDto(s: SnapshotCompleto): UltimoSnapshotDto {
     instante: iso(s.instante),
     runId: s.runId,
     accountValue: s.accountValue,
-    // Não é persistido no snapshot: desconhecido a partir da BD.
-    accountValueRepresentativo: null,
+    accountValueRepresentativo: s.accountValueRepresentativo,
+    modoConta: s.modoConta,
     precoMercado: s.marketPx,
     posicao: s.posicao
       ? {

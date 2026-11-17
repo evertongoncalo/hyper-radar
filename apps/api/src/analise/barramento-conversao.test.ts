@@ -63,9 +63,24 @@ describe('BarramentoAnalise', () => {
 describe('conversão motor ↔ persistência', () => {
   it('ida e volta preserva o snapshot do motor', () => {
     const estado = estadoCarteira({ tamanho: 12.5, lado: 'short', sl: 110, tp: 80, preco: 99 });
-    const motor = snapshotDeEstado({ ...estado, user: '0x' + 'ab'.repeat(20) }, T0);
+    const motor = snapshotDeEstado(
+      {
+        ...estado,
+        user: '0x' + 'ab'.repeat(20),
+        modoConta: 'unifiedAccount',
+        accountValueRepresentativo: false,
+      },
+      T0,
+    );
     const novo = paraNovoSnapshot(motor, 7, 3);
-    expect(novo).toMatchObject({ runId: 7, walletId: 3, marketPx: 99, instante: new Date(T0) });
+    expect(novo).toMatchObject({
+      runId: 7,
+      walletId: 3,
+      marketPx: 99,
+      instante: new Date(T0),
+      accountValueRepresentativo: false,
+      modoConta: 'unifiedAccount',
+    });
     expect(novo.posicao).toMatchObject({ lado: 'short', alavancagem: 5, notional: 1237.5 });
     expect(novo.ordens.map((o) => o.tipo)).toEqual(['SL', 'TP']);
 
@@ -75,6 +90,8 @@ describe('conversão motor ↔ persistência', () => {
       walletId: 3,
       assetId: 1,
       accountValue: novo.accountValue,
+      accountValueRepresentativo: novo.accountValueRepresentativo!,
+      modoConta: novo.modoConta!,
       marketPx: novo.marketPx,
       instante: novo.instante!,
       posicao: novo.posicao,
@@ -89,7 +106,14 @@ describe('conversão motor ↔ persistência', () => {
     expect(novo.posicao).toBeNull();
     expect(novo.marketPx).toBeNull();
     const volta = deSnapshotGravado(
-      { ...novo, id: 1, assetId: 1, instante: new Date(T0) },
+      {
+        ...novo,
+        id: 1,
+        assetId: 1,
+        instante: new Date(T0),
+        accountValueRepresentativo: true,
+        modoConta: null,
+      },
       '0x' + 'a'.repeat(40),
       'BTC',
     );

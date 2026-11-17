@@ -45,6 +45,8 @@ export function paraNovoSnapshot(
     runId,
     walletId,
     accountValue: snapshot.accountValue,
+    accountValueRepresentativo: snapshot.accountValueRepresentativo,
+    modoConta: snapshot.modoConta,
     marketPx: snapshot.precoMercado > 0 ? snapshot.precoMercado : null,
     instante: new Date(snapshot.instante),
     posicao: snapshot.posicao ? posicaoParaGravada(snapshot.posicao) : null,
@@ -77,6 +79,8 @@ export function deSnapshotGravado(
       oid: o.oid,
     })),
     accountValue: gravado.accountValue,
+    accountValueRepresentativo: gravado.accountValueRepresentativo,
+    modoConta: gravado.modoConta,
     precoMercado: gravado.marketPx ?? 0,
   };
 }

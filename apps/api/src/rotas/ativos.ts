@@ -8,7 +8,6 @@ import {
 } from '@hyper-radar/shared';
 import type { FastifyPluginAsync } from 'fastify';
 import {
-  apagarAtivo,
   contarCarteirasPorAtivo,
   contarEventosNaoLidos,
   contarEventosNaoLidosPorAtivo,
@@ -178,14 +177,9 @@ export function rotasAtivos(deps: DependenciasRotas): FastifyPluginAsync {
 
     app.delete('/ativos/:id', async (pedido, resposta) => {
       const { id } = analisar(paramsIdSchema, pedido.params, 'params');
-      const ativo = await obterAtivoOu404(deps, id);
-      // Pára a análise antes de apagar (sem ciclos a gravar num ativo inexistente).
-      const emAnalise =
-        deps.analise.ativosEmAnalise().includes(id) ||
-        ativo.estado === 'running' ||
-        ativo.estado === 'restarting';
-      if (emAnalise) await deps.analise.parar(id);
-      await apagarAtivo(deps.db, id);
+      await obterAtivoOu404(deps, id);
+      // Pára os ciclos e apaga numa só transição serializada (sem corrida com `iniciar`).
+      await deps.analise.removerAtivo(id);
       return resposta.status(204).send();
     });
   };

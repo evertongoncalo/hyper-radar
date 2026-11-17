@@ -9,6 +9,7 @@ import {
   associarCarteira,
   criarAtivo,
   criarOuObterCarteira,
+  ErroNaoEncontrado,
   obterAtivoPorId,
 } from '../repositorios';
 import { criarAmbiente, disponivel, enderecoFicticio } from '../repositorios/__testes__/ambiente';
@@ -248,6 +249,89 @@ describe.skipIf(!disponivel)('ServicoAnalise: concorrência', { timeout: 30_000 
     expect(relogio.pendentes()).toBe(0);
     expect(await runsAbertos()).toBe(0);
     expect(servico.ativosEmAnalise()).toEqual([]);
+  });
+
+  describe('removerAtivo', () => {
+    /** Ativo apagado sem rasto: sem runs, sem ciclos, sem temporizadores, nada a correr depois. */
+    async function verificarRemovido(m: Awaited<ReturnType<typeof montar>>) {
+      const { servico, ativo, relogio, cliente, base } = m;
+      expect(await obterAtivoPorId(db, ativo.id)).toBeNull();
+      const [runs] = await db
+        .select({ n: count() })
+        .from(analysisRuns)
+        .where(eq(analysisRuns.assetId, ativo.id));
+      expect(runs!.n).toBe(0);
+      expect(servico.ativosEmAnalise()).not.toContain(ativo.id);
+      expect(servico.obterSaude(ativo.id)).toBeNull();
+      expect(relogio.pendentes()).toBe(0);
+      const chamadas = base.chamadas.length;
+      relogio.avancar(60 * MINUTO);
+      await new Promise((r) => setTimeout(r, 30));
+      expect(base.chamadas.length).toBe(chamadas);
+      expect(cliente.maximo).toBeLessThanOrEqual(1);
+    }
+
+    it('rajada iniciar/removerAtivo/iniciar sem await: apaga e o iniciar posterior falha (404)', async () => {
+      const m = await montar();
+      const { servico, ativo, recebido } = m;
+      const id = ativo.id;
+      const resultados = await Promise.allSettled([
+        servico.iniciar(id),
+        servico.removerAtivo(id),
+        servico.iniciar(id),
+        servico.reiniciar(id, 'carteira adicionada'),
+        servico.parar(id),
+        servico.removerAtivo(id),
+      ]);
+      expect(resultados.map((r) => r.status)).toEqual([
+        'fulfilled',
+        'fulfilled',
+        'rejected',
+        'fulfilled',
+        'rejected',
+        'rejected',
+      ]);
+      for (const i of [2, 4, 5]) {
+        expect((resultados[i] as PromiseRejectedResult).reason).toBeInstanceOf(ErroNaoEncontrado);
+      }
+      expect((resultados[3] as PromiseFulfilledResult<unknown>).value).toBeNull();
+      // O último estado publicado para o ativo é `stopped` (a UI deixa de o mostrar em análise).
+      expect(recebido['estado-ativo'].filter((e) => e.assetId === id).at(-1)).toMatchObject({
+        estado: 'stopped',
+        runId: null,
+      });
+      await verificarRemovido(m);
+    });
+
+    it('com um ciclo pendurado: espera-o, só então apaga; iniciar em fila → 404', async () => {
+      const m = await montar();
+      const { servico, ativo, base, carteira, relogio } = m;
+      const lenta = adiada<EstadoCarteiraNoAtivo>();
+      base.definir(carteira.endereco, estadoCarteira({ tamanho: 10 }), lenta.promessa);
+      await servico.iniciar(ativo.id);
+      relogio.avancar(MINUTO);
+      await aguardar(() => servico.obterSaude(ativo.id)?.cicloEmCurso === true, 'ciclo em curso');
+
+      const remover = servico.removerAtivo(ativo.id);
+      const iniciar = servico.iniciar(ativo.id);
+      await new Promise((r) => setTimeout(r, 30));
+      // Enquanto o ciclo não termina, o ativo continua a existir.
+      expect(await obterAtivoPorId(db, ativo.id)).not.toBeNull();
+
+      lenta.resolver(estadoCarteira({ tamanho: 10 }));
+      await remover;
+      await expect(iniciar).rejects.toBeInstanceOf(ErroNaoEncontrado);
+      await verificarRemovido(m);
+    });
+
+    it('ativo parado apaga-se sem publicar estado; inexistente → ErroNaoEncontrado', async () => {
+      const m = await montar();
+      const { servico, ativo, recebido } = m;
+      await servico.removerAtivo(ativo.id);
+      expect(recebido['estado-ativo']).toEqual([]);
+      await expect(servico.removerAtivo(ativo.id)).rejects.toBeInstanceOf(ErroNaoEncontrado);
+      await verificarRemovido(m);
+    });
   });
 
   it('carteira com 3 leituras falhadas que volta maior: sem CLOSED, INCREASED face ao último válido', async () => {

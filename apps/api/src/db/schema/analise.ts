@@ -58,6 +58,11 @@ export const snapshots = pgTable(
       .references(() => assets.id, { onDelete: 'cascade' }),
     // `marginSummary.accountValue`: equity da conta, base do cálculo proporcional.
     accountValue: decimalUsd('account_value').notNull(),
+    // `false` em conta unificada / margem de portfólio: o `accountValue` por DEX não representa a
+    // equity real da conta (o cálculo proporcional não o deve usar sem ressalva).
+    accountValueRepresentative: boolean('account_value_representative').notNull().default(true),
+    // Modo da conta devolvido pela Hyperliquid (`userAbstraction`); `null` se desconhecido.
+    accountMode: text('account_mode'),
     marketPx: decimalCripto('market_px'),
     takenAt: timestamp('taken_at', { withTimezone: true }).notNull().defaultNow(),
   },

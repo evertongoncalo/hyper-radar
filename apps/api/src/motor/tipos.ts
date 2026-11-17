@@ -44,6 +44,10 @@ export interface SnapshotCarteira {
   /** Só ordens que protegem a posição (trigger redutoras), por ordem determinística. */
   ordensProtecao: OrdemProtecaoMotor[];
   accountValue: number;
+  /** `false` em conta unificada / margem de portfólio (o `accountValue` por DEX não é a equity). */
+  accountValueRepresentativo: boolean;
+  /** Modo da conta (`userAbstraction`); `null` se desconhecido. */
+  modoConta: string | null;
   precoMercado: number;
 }
 
@@ -122,6 +126,8 @@ export function snapshotDeEstado(
     posicao: estado.posicao ? converterPosicao(estado.posicao) : null,
     ordensProtecao: ordenarProtecoes(ordens),
     accountValue: estado.accountValue,
+    accountValueRepresentativo: estado.accountValueRepresentativo,
+    modoConta: estado.modoConta,
     precoMercado: estado.mercado.markPx,
   };
 }

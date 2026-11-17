@@ -48,6 +48,8 @@ export function snapshot(
     posicao: pos,
     ordensProtecao: [],
     accountValue: 1_000_000,
+    accountValueRepresentativo: true,
+    modoConta: 'default',
     precoMercado: 100,
     ...extra,
   };

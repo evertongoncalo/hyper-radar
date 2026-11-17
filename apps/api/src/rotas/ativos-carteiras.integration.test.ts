@@ -151,7 +151,12 @@ describe.skipIf(!disponivel)(
 
       beforeAll(async () => {
         eth = (await criarAtivo('ETH')).id;
-        cliente.definir(A, estadoCarteira({ tamanho: 10, entryPx: 95, sl: 90, tp: 120 }));
+        // Conta unificada: o `accountValue` por DEX não é representativo (tem de chegar à rota).
+        cliente.definir(A, {
+          ...estadoCarteira({ tamanho: 10, entryPx: 95, sl: 90, tp: 120 }),
+          modoConta: 'unifiedAccount',
+          accountValueRepresentativo: false,
+        });
         cliente.definir(B, estadoCarteira({ tamanho: 5, lado: 'short' }));
       });
 
@@ -218,7 +223,8 @@ describe.skipIf(!disponivel)(
           desatualizada: false,
           ultimoSnapshot: {
             accountValue: 1_000_000,
-            accountValueRepresentativo: null,
+            accountValueRepresentativo: false,
+            modoConta: 'unifiedAccount',
             precoMercado: 100,
             posicao: { lado: 'long', tamanho: 10, entryPx: 95, alavancagem: 5 },
             ordens: [

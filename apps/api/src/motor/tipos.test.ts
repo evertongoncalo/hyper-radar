@@ -137,6 +137,8 @@ describe('snapshotDeEstado', () => {
       },
       ordensProtecao: [],
       accountValue: 5_000,
+      accountValueRepresentativo: true,
+      modoConta: 'default',
       precoMercado: 103,
     });
     expect(snapshotDeEstado(estado(), 42).instante).toBe(42);
