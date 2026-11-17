@@ -255,8 +255,7 @@ export function calcularSugestao(e: EntradaSugestao): SugestaoProporcionalDto {
       'O accountValue da baleia é zero ou inválido: não é possível calcular a proporção.',
     );
   }
-  const preco = e.precoAtual;
-  if (!positivo(preco)) {
+  if (!positivo(e.precoAtual)) {
     return inviavel('PRECO_INVALIDO', 'Sem preço de mercado válido para o ativo.');
   }
   if (
@@ -281,6 +280,11 @@ export function calcularSugestao(e: EntradaSugestao): SugestaoProporcionalDto {
       'METADADOS_INVALIDOS',
       'Metadados do ativo (szDecimals/alavancagem) indisponíveis.',
     );
+  }
+  // O mid pode ter meio tick a mais (ex.: 65454,5 no BTC): usa-se o preço válido mais próximo.
+  const preco = arredondarPreco(e.precoAtual, meta.szDecimals);
+  if (preco === null) {
+    return inviavel('PRECO_INVALIDO', 'Sem preço de mercado válido para o ativo.');
   }
   const fator = capitalUsd / accountValue;
   const fracaoMargem = pos.marginUsed / accountValue;
