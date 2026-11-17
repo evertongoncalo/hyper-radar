@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { pino } from 'pino';
 import { ServicoAnalise } from './analise';
 import { buildApp } from './app';
@@ -7,17 +8,27 @@ import { ClienteHyperliquid } from './hyperliquid';
 
 // O servidor escuta apenas em 127.0.0.1: a aplicação é local e não deve ficar exposta na rede.
 const HOST = '127.0.0.1';
+// Build do frontend (apps/web/dist): o mesmo caminho relativo a partir de src/ (tsx) e dist/.
+const PASTA_WEB = fileURLToPath(new URL('../../web/dist', import.meta.url));
 
 const config = carregarConfig();
 const logger = pino({ level: config.LOG_LEVEL });
 const { db, fechar } = criarDb(config.DATABASE_URL);
+const cliente = new ClienteHyperliquid();
 const analise = new ServicoAnalise({
   db,
-  cliente: new ClienteHyperliquid(),
+  cliente,
   logger: logger.child({ modulo: 'analise' }),
   diasRetencao: config.SNAPSHOT_RETENTION_DAYS,
 });
-const app = buildApp({ logger, analise });
+const app = buildApp({
+  db,
+  analise,
+  cliente,
+  logger,
+  seguranca: { porta: config.PORT, origensPermitidas: config.ALLOWED_ORIGINS },
+  pastaWeb: PASTA_WEB,
+});
 
 try {
   await app.listen({ host: HOST, port: config.PORT });

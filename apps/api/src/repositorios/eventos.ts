@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, inArray, lt, lte, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, gt, gte, inArray, lt, lte, type SQL } from 'drizzle-orm';
 import { assets, events, wallets, type Event } from '../db/schema';
 import type { Executor } from './comum';
 import { comTraducao, ErroValorInvalido } from './erros';
@@ -164,6 +164,46 @@ export async function marcarEventosDoAtivoLidos(db: Executor, assetId: number): 
     .set({ read: true })
     .where(and(eq(events.assetId, assetId), eq(events.read, false)));
   return resultado.count;
+}
+
+/**
+ * Eventos com `id` superior a `aposId`, do mais antigo para o mais recente (reenvio SSE após
+ * `Last-Event-ID`). Com mais de `limite`, devolve os `limite` mais recentes.
+ */
+export async function listarEventosApos(
+  db: Executor,
+  aposId: number,
+  limite: number,
+): Promise<EventoDetalhado[]> {
+  const linhas = await db
+    .select({
+      evento: events,
+      ticker: assets.ticker,
+      endereco: wallets.address,
+      alias: wallets.alias,
+    })
+    .from(events)
+    .innerJoin(assets, eq(events.assetId, assets.id))
+    .innerJoin(wallets, eq(events.walletId, wallets.id))
+    .where(gt(events.id, aposId))
+    .orderBy(desc(events.id))
+    .limit(limite);
+  return linhas.reverse().map((l) => ({
+    ...paraEvento(l.evento),
+    ticker: l.ticker,
+    endereco: l.endereco,
+    alias: l.alias,
+  }));
+}
+
+/** Número de eventos não lidos por ativo (ativos sem não lidos não aparecem). */
+export async function contarEventosNaoLidosPorAtivo(db: Executor): Promise<Map<number, number>> {
+  const linhas = await db
+    .select({ assetId: events.assetId, n: count() })
+    .from(events)
+    .where(eq(events.read, false))
+    .groupBy(events.assetId);
+  return new Map(linhas.map((l) => [l.assetId, l.n]));
 }
 
 /** Número de eventos não lidos (de um ativo, ou de todos). */

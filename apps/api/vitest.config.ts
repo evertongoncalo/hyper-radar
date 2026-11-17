@@ -26,6 +26,7 @@ export default defineConfig({
         'src/hyperliquid/**': limiar,
         'src/motor/**': limiar,
         'src/analise/**': limiar,
+        'src/rotas/**': limiar,
       },
     },
   },

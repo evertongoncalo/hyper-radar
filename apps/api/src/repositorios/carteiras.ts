@@ -1,5 +1,5 @@
 import { enderecoCarteiraSchema } from '@hyper-radar/shared';
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, count, eq, sql } from 'drizzle-orm';
 import { assets, assetWallets, wallets, type Wallet } from '../db/schema';
 import type { Executor } from './comum';
 import { comTraducao, ErroEnderecoInvalido, ErroNaoEncontrado } from './erros';
@@ -154,6 +154,25 @@ export async function listarCarteirasComAtivos(db: Executor): Promise<CarteiraCo
     if (l.ativoId !== null && l.ticker !== null) c.ativos.push({ id: l.ativoId, ticker: l.ticker });
   }
   return [...porId.values()];
+}
+
+/** Número de carteiras associadas a cada ativo (ativos sem carteiras não aparecem). */
+export async function contarCarteirasPorAtivo(db: Executor): Promise<Map<number, number>> {
+  const linhas = await db
+    .select({ assetId: assetWallets.assetId, n: count() })
+    .from(assetWallets)
+    .groupBy(assetWallets.assetId);
+  return new Map(linhas.map((l) => [l.assetId, l.n]));
+}
+
+/** Ids dos ativos a que a carteira está associada. */
+export async function listarIdsAtivosDaCarteira(db: Executor, walletId: number): Promise<number[]> {
+  const linhas = await db
+    .select({ assetId: assetWallets.assetId })
+    .from(assetWallets)
+    .where(eq(assetWallets.walletId, walletId))
+    .orderBy(asc(assetWallets.assetId));
+  return linhas.map((l) => l.assetId);
 }
 
 /** Apaga a carteira (cascata: associações, snapshots e eventos). */

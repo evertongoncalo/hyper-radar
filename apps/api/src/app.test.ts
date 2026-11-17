@@ -1,22 +1,48 @@
+import { respostaSaudeServidorSchema } from '@hyper-radar/shared';
 import { afterAll, describe, expect, it } from 'vitest';
-import { buildApp } from './app';
 import { carregarConfig } from './config';
+import type { Db } from './db/client';
+import { criarApp } from './rotas/__testes__/auxiliares';
 
 describe('GET /health', () => {
-  const app = buildApp();
+  // BD falsa: só `execute` é usado pelo /health.
+  let bdOk = true;
+  const db = {
+    execute: async () => {
+      if (!bdOk) throw new Error('ligação recusada');
+      return [];
+    },
+  } as unknown as Db;
+  const { app, analise } = criarApp(db);
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('devolve status ok', async () => {
+  it('devolve ok com o estado da BD e o nº de ativos em análise', async () => {
     const resposta = await app.inject({ method: 'GET', url: '/health' });
     expect(resposta.statusCode).toBe(200);
-    expect(resposta.json()).toEqual({ status: 'ok' });
+    expect(respostaSaudeServidorSchema.parse(resposta.json())).toEqual({
+      status: 'ok',
+      bd: 'ok',
+      ativosEmAnalise: 0,
+    });
   });
 
-  it('sem serviço de análise injetado, a decoração é null', () => {
-    expect(app.analise).toBeNull();
+  it('BD em baixo → 503 degradado', async () => {
+    bdOk = false;
+    const resposta = await app.inject({ method: 'GET', url: '/health' });
+    bdOk = true;
+    expect(resposta.statusCode).toBe(503);
+    expect(resposta.json()).toEqual({
+      status: 'degradado',
+      bd: 'indisponivel',
+      ativosEmAnalise: 0,
+    });
+  });
+
+  it('expõe o serviço de análise como decoração', () => {
+    expect(app.analise).toBe(analise);
   });
 });
 
@@ -49,6 +75,19 @@ describe('carregarConfig', () => {
     );
     expect(() => carregarConfig({ ...base, SNAPSHOT_RETENTION_DAYS: '0' })).toThrow(
       /SNAPSHOT_RETENTION_DAYS/,
+    );
+  });
+
+  it('ALLOWED_ORIGINS: omissão Vite dev, lista por vírgulas, rejeita origens inválidas', () => {
+    expect(carregarConfig(base).ALLOWED_ORIGINS).toEqual([
+      'http://127.0.0.1:5173',
+      'http://localhost:5173',
+    ]);
+    expect(
+      carregarConfig({ ...base, ALLOWED_ORIGINS: ' http://localhost:4000 ,' }).ALLOWED_ORIGINS,
+    ).toEqual(['http://localhost:4000']);
+    expect(() => carregarConfig({ ...base, ALLOWED_ORIGINS: 'ftp://x' })).toThrow(
+      /ALLOWED_ORIGINS/,
     );
   });
 
