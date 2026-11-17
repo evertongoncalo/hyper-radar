@@ -339,6 +339,12 @@ export class ServicoAnalise {
       const atualizado = await alterarEstadoAtivo(tx, ativo.id, 'running');
       return { run, atualizado };
     });
+    // `encerrar()` correu durante esta transição (ex.: reiniciar a meio): não arrancar ciclos
+    // órfãos. O run fecha-se e o estado fica `running`, para retomar no próximo arranque.
+    if (this.encerrado) {
+      await fecharRun(this.db, run.id);
+      return atualizado;
+    }
     const ex: Execucao = {
       assetId: ativo.id,
       ticker: ativo.ticker,

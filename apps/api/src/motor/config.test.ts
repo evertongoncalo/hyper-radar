@@ -15,13 +15,12 @@ describe('config do motor', () => {
       liqRearmePct: 7,
       toleranciaPrecoSltpPct: 0.05,
       toleranciaRelativa: 1e-9,
-      bucketDedupeMs: 300_000,
     });
     expect(Object.isFrozen(CONFIG_OMISSAO)).toBe(true);
   });
 
-  it('bucket de dedupe acompanha a janela de agregação, salvo se indicado', () => {
-    expect(criarConfig({ janelaAgregacaoMs: 60_000 }).bucketDedupeMs).toBe(60_000);
+  it('bucket de dedupe só existe se indicado (omissão: início exato da janela)', () => {
+    expect(criarConfig({ janelaAgregacaoMs: 60_000 }).bucketDedupeMs).toBeUndefined();
     expect(criarConfig({ janelaAgregacaoMs: 60_000, bucketDedupeMs: 1_000 }).bucketDedupeMs).toBe(
       1_000,
     );

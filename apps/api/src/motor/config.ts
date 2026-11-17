@@ -36,9 +36,10 @@ export const configMotorSchema = z
     /** Tolerância relativa para comparar tamanhos/preços (ruído de vírgula flutuante). */
     toleranciaRelativa: z.number().nonnegative().max(1e-3).default(1e-9),
     /**
-     * Duração do bucket temporal da chave de deduplicação dos tipos agregados (`INCREASED`,
-     * `REDUCED`, `SLTP_CHANGED`), em ms; omissão = janela de agregação. Os tipos imediatos usam o
-     * instante exato do snapshot.
+     * Bucket temporal (ms) opcional da chave de deduplicação dos tipos agregados (`INCREASED`,
+     * `REDUCED`, `SLTP_CHANGED`). Omissão: o instante exato do início da janela, que é único por
+     * janela; um bucket fixo faria colidir duas janelas legítimas no mesmo bucket (e a BD
+     * descartaria a segunda). Os tipos imediatos usam sempre o instante exato do snapshot.
      */
     bucketDedupeMs: z.number().int().positive().optional(),
   })
@@ -46,8 +47,7 @@ export const configMotorSchema = z
   .refine((c) => c.liqRearmePct > c.liqNearPct, {
     message: 'O rearme de LIQ_NEAR tem de ser superior ao limiar.',
     path: ['liqRearmePct'],
-  })
-  .transform((c) => ({ ...c, bucketDedupeMs: c.bucketDedupeMs ?? c.janelaAgregacaoMs }));
+  });
 
 export type ConfigMotor = Readonly<z.output<typeof configMotorSchema>>;
 export type ConfigMotorEntrada = z.input<typeof configMotorSchema>;

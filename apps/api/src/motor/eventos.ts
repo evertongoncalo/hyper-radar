@@ -138,9 +138,9 @@ export const TIPOS_IMEDIATOS: ReadonlySet<TipoEvento> = new Set<TipoEvento>([
 ]);
 
 /**
- * Chave de deduplicação determinística: carteira + ativo + tipo + instante. Com `bucketMs`, o
- * instante é o início do bucket que contém o início da janela do evento (tipos agregados); com
- * `null`, é o instante exato. Separador `|` porque os tickers HIP-3 contêm `:`.
+ * Chave de deduplicação determinística: carteira + ativo + tipo + instante (do snapshot nos tipos
+ * imediatos, do início da janela nos agregados). Com `bucketMs`, usa-se o início do bucket que o
+ * contém; com `null`, o instante exato. Separador `|` porque os tickers HIP-3 contêm `:`.
  */
 export function calcularChaveDedupe(
   carteira: string,
@@ -171,7 +171,7 @@ export function criarEvento<K extends TipoEvento>(
       dados.ativo,
       tipo,
       imediato ? dados.instante : (dados.inicioJanela ?? dados.instante),
-      imediato ? null : config.bucketDedupeMs,
+      imediato ? null : (config.bucketDedupeMs ?? null),
     ),
   };
   return evento as EventoMotor<K>;
