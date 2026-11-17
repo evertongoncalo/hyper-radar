@@ -116,6 +116,35 @@ describe('carregarConfig', () => {
     expect(() => carregarConfig({ ...base, OPENAI_MODEL: 'mau modelo!' })).toThrow(/OPENAI_MODEL/);
   });
 
+  it('URLs base externas: omissão oficial; aceita https:// e http:// só em 127.0.0.1/localhost', () => {
+    expect(carregarConfig(base)).toMatchObject({
+      HYPERLIQUID_API_URL: 'https://api.hyperliquid.xyz',
+      OPENAI_BASE_URL: 'https://api.openai.com/v1',
+    });
+    expect(
+      carregarConfig({
+        ...base,
+        HYPERLIQUID_API_URL: ' http://127.0.0.1:3211 ',
+        OPENAI_BASE_URL: 'http://localhost:3211/v1',
+      }),
+    ).toMatchObject({
+      HYPERLIQUID_API_URL: 'http://127.0.0.1:3211',
+      OPENAI_BASE_URL: 'http://localhost:3211/v1',
+    });
+    expect(carregarConfig({ ...base, HYPERLIQUID_API_URL: '' }).HYPERLIQUID_API_URL).toBe(
+      'https://api.hyperliquid.xyz',
+    );
+    expect(
+      carregarConfig({ ...base, OPENAI_BASE_URL: 'https://proxy.exemplo.pt/v1' }).OPENAI_BASE_URL,
+    ).toBe('https://proxy.exemplo.pt/v1');
+    for (const mau of ['http://exemplo.pt', 'http://192.168.1.5:80', 'ftp://127.0.0.1', 'x']) {
+      expect(() => carregarConfig({ ...base, HYPERLIQUID_API_URL: mau })).toThrow(
+        /HYPERLIQUID_API_URL/,
+      );
+      expect(() => carregarConfig({ ...base, OPENAI_BASE_URL: mau })).toThrow(/OPENAI_BASE_URL/);
+    }
+  });
+
   it('exige DATABASE_URL', () => {
     expect(() => carregarConfig({})).toThrow(/DATABASE_URL/);
   });

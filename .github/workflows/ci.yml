@@ -77,3 +77,54 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  e2e:
+    name: E2E de fumo (Playwright)
+    runs-on: ubuntu-latest
+    # O setup cria e apaga a base hyperradar_e2e neste Postgres descartável.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: hyperradar
+          POSTGRES_PASSWORD: hyperradar
+          POSTGRES_DB: hyperradar_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hyperradar -d hyperradar_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Instalar o Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      # Nunca contacta a Hyperliquid nem a OpenAI reais: servidor falso local em 127.0.0.1.
+      - name: E2E
+        run: npm run test:e2e
+        env:
+          E2E_DATABASE_URL: postgres://hyperradar:hyperradar@127.0.0.1:5432/hyperradar_e2e
+
+      - name: Guardar o relatório do Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

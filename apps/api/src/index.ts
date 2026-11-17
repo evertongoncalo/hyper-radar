@@ -4,8 +4,9 @@ import { ServicoAnalise } from './analise';
 import { buildApp } from './app';
 import { carregarConfig } from './config';
 import { criarDb } from './db/client';
-import { ClienteHyperliquid } from './hyperliquid';
+import { ClienteHyperliquid, URL_BASE_OFICIAL } from './hyperliquid';
 import { ClienteOpenAi, ServicoIa } from './ia';
+import { URL_OPENAI_OMISSAO } from './ia/cliente-openai';
 
 // O servidor escuta apenas em 127.0.0.1: a aplicação é local e não deve ficar exposta na rede.
 const HOST = '127.0.0.1';
@@ -15,7 +16,13 @@ const PASTA_WEB = fileURLToPath(new URL('../../web/dist', import.meta.url));
 const config = carregarConfig();
 const logger = pino({ level: config.LOG_LEVEL });
 const { db, fechar } = criarDb(config.DATABASE_URL);
-const cliente = new ClienteHyperliquid();
+const cliente = new ClienteHyperliquid({ urlBase: config.HYPERLIQUID_API_URL });
+if (
+  config.HYPERLIQUID_API_URL !== URL_BASE_OFICIAL ||
+  config.OPENAI_BASE_URL !== URL_OPENAI_OMISSAO
+) {
+  logger.warn('URLs base não oficiais configuradas (HYPERLIQUID_API_URL/OPENAI_BASE_URL).');
+}
 const analise = new ServicoAnalise({
   db,
   cliente,
@@ -27,7 +34,7 @@ const ia = new ServicoIa({
   db,
   analise,
   mercado: cliente,
-  gerador: new ClienteOpenAi({ chave: config.OPENAI_API_KEY }),
+  gerador: new ClienteOpenAi({ chave: config.OPENAI_API_KEY, urlBase: config.OPENAI_BASE_URL }),
   modelo: config.OPENAI_MODEL,
   logger: logger.child({ modulo: 'ia' }),
 });

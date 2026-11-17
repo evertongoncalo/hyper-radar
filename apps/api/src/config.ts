@@ -1,5 +1,31 @@
 import { z } from 'zod';
+import { URL_BASE_OFICIAL } from './hyperliquid/transporte';
+import { URL_OPENAI_OMISSAO } from './ia/cliente-openai';
 import { MODELO_IA_OMISSAO } from './ia/custos';
+
+const HOSTS_LOCAIS = new Set(['127.0.0.1', 'localhost']);
+
+/**
+ * URL base de um serviço externo (vazio = oficial). Só `https://`, ou `http://` para
+ * 127.0.0.1/localhost (servidores falsos dos testes E2E); nunca HTTP em claro para fora.
+ */
+const urlServicoExterno = (nome: string, omissao: string) =>
+  z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v === undefined || v === '' ? omissao : v))
+    .pipe(
+      z.url({ protocol: /^https?$/, error: `${nome}: URL inválido.` }).refine(
+        (v) => {
+          // O refine corre mesmo quando `z.url` já falhou: proteger o `new URL`.
+          if (!URL.canParse(v)) return false;
+          const u = new URL(v);
+          return u.protocol === 'https:' || HOSTS_LOCAIS.has(u.hostname);
+        },
+        { error: `${nome}: só https:// ou http://127.0.0.1 / http://localhost.` },
+      ),
+    );
 
 /** Variáveis de ambiente usadas pela API, validadas no arranque. */
 const configSchema = z.object({
@@ -43,6 +69,9 @@ const configSchema = z.object({
         .string()
         .regex(/^[A-Za-z0-9._:-]{1,100}$/, { error: 'OPENAI_MODEL: nome de modelo inválido.' }),
     ),
+  // URLs base das APIs externas (omissão: oficiais). Só para testes E2E com servidores falsos.
+  HYPERLIQUID_API_URL: urlServicoExterno('HYPERLIQUID_API_URL', URL_BASE_OFICIAL),
+  OPENAI_BASE_URL: urlServicoExterno('OPENAI_BASE_URL', URL_OPENAI_OMISSAO),
 });
 
 export type Config = z.infer<typeof configSchema>;
