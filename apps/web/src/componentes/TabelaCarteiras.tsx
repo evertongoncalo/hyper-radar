@@ -17,6 +17,7 @@ import {
 import {
   classeBotaoPerigo,
   classeBotaoPrimario,
+  classeBotaoSecundario,
   classeCampo,
   Endereco,
   Etiqueta,
@@ -50,11 +51,13 @@ function Linha({
   precoAtivo,
   aoRemover,
   aRemover,
+  aoPedirSugestao,
 }: {
   c: CarteiraNoAtivo;
   precoAtivo: number | null;
   aoRemover: () => void;
   aRemover: boolean;
+  aoPedirSugestao: (() => void) | undefined;
 }) {
   const s = c.ultimoSnapshot;
   const p = s?.posicao ?? null;
@@ -123,15 +126,27 @@ function Linha({
         </td>
       )}
       <td className="py-2 text-right">
-        <button
-          type="button"
-          className={classeBotaoPerigo}
-          onClick={aoRemover}
-          disabled={aRemover}
-          aria-label={`Remover ${nomeCarteira(c)} deste ativo`}
-        >
-          Remover
-        </button>
+        <div className="flex flex-wrap justify-end gap-1">
+          {p && aoPedirSugestao && (
+            <button
+              type="button"
+              className={classeBotaoSecundario}
+              onClick={aoPedirSugestao}
+              aria-label={`Sugestão para ${nomeCarteira(c)}`}
+            >
+              Sugestão
+            </button>
+          )}
+          <button
+            type="button"
+            className={classeBotaoPerigo}
+            onClick={aoRemover}
+            disabled={aRemover}
+            aria-label={`Remover ${nomeCarteira(c)} deste ativo`}
+          >
+            Remover
+          </button>
+        </div>
       </td>
     </tr>
   );
@@ -142,11 +157,14 @@ export function TabelaCarteiras({
   ticker,
   carteiras,
   precoAtivo,
+  aoPedirSugestao,
 }: {
   ativoId: number;
   ticker: string;
   carteiras: CarteiraNoAtivo[];
   precoAtivo: number | null;
+  /** Calcula a sugestão proporcional só para a carteira dada. */
+  aoPedirSugestao?: (carteiraId: number) => void;
 }) {
   const remover = useRemoverCarteiraDoAtivo(ativoId);
   const pedirRemocao = (c: CarteiraNoAtivo) => {
@@ -219,6 +237,7 @@ export function TabelaCarteiras({
                   precoAtivo={precoAtivo}
                   aoRemover={() => pedirRemocao(c)}
                   aRemover={remover.isPending}
+                  aoPedirSugestao={aoPedirSugestao ? () => aoPedirSugestao(c.id) : undefined}
                 />
               ))}
             </tbody>

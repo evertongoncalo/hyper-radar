@@ -13,6 +13,7 @@ import {
   listaAtivosSchema,
   listaCarteirasSchema,
   paginaEventosSchema,
+  respostaSugestaoSchema,
   type AdicionarCarteiraPedido,
   type AlterarCarteiraPedido,
   type AlterarDefinicoesPedido,
@@ -44,6 +45,9 @@ export const api = {
   pararAnalise: (id: number) =>
     pedirApi(`/ativos/${id}/analise/parar`, ativoResumoSchema, { metodo: 'POST' }),
   obterAgregados: (id: number) => pedirApi(`/ativos/${id}/agregados`, agregadosAtivoRespostaSchema),
+  /** Sugestão proporcional (cálculo local na API; nunca envia ordens). */
+  obterSugestao: (id: number, carteira?: number) =>
+    pedirApi(`/ativos/${id}/sugestao`, respostaSugestaoSchema, { query: { carteira } }),
 
   adicionarCarteira: (ativoId: number, pedido: AdicionarCarteiraPedido) =>
     pedirApi(`/ativos/${ativoId}/carteiras`, adicionarCarteiraRespostaSchema, {

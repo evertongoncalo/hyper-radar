@@ -77,7 +77,7 @@ describe('Ativo (detalhe)', () => {
     expect(within(linhaB).getByText('Sem posição neste ativo.')).toBeInTheDocument();
   });
 
-  it('agregados e espaços reservados para as Fases 5 e 6', async () => {
+  it('agregados, sugestão a pedido e espaço reservado para a Fase 6', async () => {
     mockFetch(rotasAtivo());
     renderizarApp('/ativos/1');
     expect(await screen.findByText('Net long')).toBeInTheDocument();
@@ -85,9 +85,9 @@ describe('Ativo (detalhe)', () => {
     expect(screen.getByText(/Hedge interno/)).toBeInTheDocument();
     expect(screen.getByText('Variação 1 h')).toBeInTheDocument();
     expect(screen.getByText('Sem histórico suficiente.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Calcular sugestão proporcional' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Calcular sugestão proporcional' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Pedir análise IA' })).toBeDisabled();
-    expect(screen.getAllByText('Disponível em breve.')).toHaveLength(2);
+    expect(screen.getAllByText('Disponível em breve.')).toHaveLength(1);
   });
 
   it('erro nos agregados não esconde o resto', async () => {

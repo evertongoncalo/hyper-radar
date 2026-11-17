@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { Link, useParams } from 'react-router';
 import { mensagemDeErro } from '../api/cliente';
 import { Agregados } from '../componentes/Agregados';
@@ -13,10 +13,12 @@ import {
   Vazio,
 } from '../componentes/comuns';
 import { ListaEventos } from '../componentes/FeedEventos';
+import { ID_PAINEL_SUGESTAO, PainelSugestao } from '../componentes/SugestaoProporcional';
 import { TabelaCarteiras } from '../componentes/TabelaCarteiras';
 import {
   useAgregados,
   useAtivo,
+  useCalcularSugestao,
   useDefinicoes,
   useEventos,
   useMarcarEventosDoAtivoLidos,
@@ -125,6 +127,16 @@ function DetalheAtivo({ id }: { id: number }) {
   const ativo = useAtivo(id);
   const definicoes = useDefinicoes();
   const agora = useAgora();
+  const sugestao = useCalcularSugestao(id);
+  const refSugestao = useRef<HTMLDivElement>(null);
+  const calcularSugestao = (carteira?: number) => sugestao.mutate(carteira);
+  /** Botão "Sugestão" de uma linha: calcula só essa carteira e leva o utilizador ao painel. */
+  const sugestaoDaCarteira = (carteira: number) => {
+    calcularSugestao(carteira);
+    const painel = refSugestao.current;
+    painel?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    painel?.focus({ preventScroll: true });
+  };
 
   if (ativo.isPending) return <Carregando texto="A carregar ativo…" />;
   if (ativo.isError) {
@@ -176,15 +188,19 @@ function DetalheAtivo({ id }: { id: number }) {
           ticker={a.ticker}
           carteiras={a.carteiras}
           precoAtivo={a.precoMercado?.valor ?? null}
+          aoPedirSugestao={sugestaoDaCarteira}
         />
       </Seccao>
 
       <SeccaoAgregados ativoId={a.id} />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <EmBreve titulo="Sugestão proporcional" botao="Calcular sugestão proporcional" />
-        <EmBreve titulo="Análise IA" botao="Pedir análise IA" />
+      <div id={ID_PAINEL_SUGESTAO} ref={refSugestao} tabIndex={-1} className="outline-none">
+        <Seccao titulo="Sugestão proporcional" id="titulo-sugestao-proporcional">
+          <PainelSugestao calculo={sugestao} aoCalcular={calcularSugestao} />
+        </Seccao>
       </div>
+
+      <EmBreve titulo="Análise IA" botao="Pedir análise IA" />
 
       <Feed ativoId={a.id} naoLidos={a.eventosNaoLidos} />
     </div>

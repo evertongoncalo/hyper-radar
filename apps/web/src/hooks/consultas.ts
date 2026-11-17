@@ -4,6 +4,7 @@ import type {
   AlterarDefinicoesPedido,
   AtivoResumo,
   Exportacao,
+  RespostaSugestao,
 } from '@hyper-radar/shared';
 import {
   useInfiniteQuery,
@@ -47,6 +48,27 @@ export function useEventos(filtros: FiltrosEventos) {
     queryFn: ({ pageParam }) => api.listarEventos(filtros, pageParam),
     initialPageParam: null as number | null,
     getNextPageParam: (ultima) => ultima.proximoCursor,
+  });
+}
+
+/** Resultado de um cálculo de sugestão, com o instante (cliente) em que foi pedido. */
+export interface CalculoSugestao {
+  resposta: RespostaSugestao;
+  /** `undefined` = todas as carteiras com posição. */
+  carteira: number | undefined;
+  calculadoEm: number;
+}
+
+/**
+ * Sugestão proporcional só a pedido: é uma mutação (e não uma query) para nunca ser recalculada
+ * sozinha por invalidações, foco da janela ou religação do SSE.
+ */
+export function useCalcularSugestao(ativoId: number) {
+  return useMutation({
+    mutationFn: async (carteira?: number): Promise<CalculoSugestao> => {
+      const resposta = await api.obterSugestao(ativoId, carteira);
+      return { resposta, carteira, calculadoEm: Date.now() };
+    },
   });
 }
 

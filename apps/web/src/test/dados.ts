@@ -7,6 +7,9 @@ import type {
   DefinicoesDto,
   EventoDto,
   PaginaEventosDto,
+  RespostaSugestao,
+  SugestaoCarteiraDto,
+  SugestaoProporcionalDto,
 } from '@hyper-radar/shared';
 
 // Dados fictícios para os testes (endereços inventados).
@@ -191,6 +194,85 @@ export function definicoes(extra: Partial<DefinicoesDto> = {}): DefinicoesDto {
     limiteDiarioChamadasIa: 10,
     limiteDiarioTokensIa: 100_000,
     atualizadoEm: INSTANTE,
+    ...extra,
+  };
+}
+
+const LEGAL = 'Informação para apoio à decisão. Não constitui aconselhamento financeiro.';
+
+/** Sugestão viável completa (Baleia A, long, alavancagem limitada ao máximo do utilizador). */
+export function sugestaoProporcional(
+  extra: Partial<SugestaoProporcionalDto> = {},
+): SugestaoProporcionalDto {
+  return {
+    viavel: true,
+    motivo: null,
+    lado: 'long',
+    fator: 0.001,
+    baleia: {
+      accountValue: 1_000_000,
+      accountValueRepresentativo: true,
+      modoConta: null,
+      percentagemMargemPct: 12.5,
+      alavancagem: 10,
+      tipoMargem: 'cross',
+      entryPx: 95_000,
+      tamanho: 12.5,
+      notional: 1_250_000,
+      liquidationPx: 80_000,
+    },
+    posicao: {
+      precoEntrada: 100_000,
+      alavancagem: 5,
+      alavancagemLimitada: true,
+      margemUsd: 38,
+      notionalUsd: 190,
+      tamanho: 0.0019,
+      szDecimals: 5,
+      stopLoss: { precoBaleia: 90_000, distanciaPct: -5.263158, preco: 94_737 },
+      takeProfit: { precoBaleia: 120_000, distanciaPct: 26.315789, preco: 126_320 },
+      liquidacaoEstimada: 80_800,
+      riscoMaximoUsd: 10,
+      perdaAteStopUsd: 9.99,
+      perdaAteLiquidacaoUsd: null,
+      limitadoPeloRisco: true,
+    },
+    entradaTardia: { variacaoFavoravelPct: 5.263158, limiarPct: 3, tardia: true },
+    rr: { sugerido: 5, baleia: 5, aosNiveisDaBaleia: 2 },
+    ordemMinimaUsd: 10,
+    avisos: [
+      { codigo: 'ENTRADA_TARDIA', nivel: 'atencao', mensagem: 'O preço já andou 5,26 % a favor.' },
+      { codigo: 'MARGEM_CRUZADA_BALEIA', nivel: 'info', mensagem: 'A baleia usa margem cruzada.' },
+      {
+        codigo: 'ALAVANCAGEM_LIMITADA',
+        nivel: 'atencao',
+        mensagem: 'Alavancagem da baleia (10x) limitada a 5x (máximo das suas definições).',
+      },
+    ],
+    avisoLegal: LEGAL,
+    ...extra,
+  };
+}
+
+export function sugestaoCarteira(extra: Partial<SugestaoCarteiraDto> = {}): SugestaoCarteiraDto {
+  return {
+    carteira: { id: 10, endereco: E1, alias: 'Baleia A', entidade: 'Fundo X' },
+    instanteSnapshot: INSTANTE,
+    runId: 1,
+    sugestao: sugestaoProporcional(),
+    ...extra,
+  };
+}
+
+export function respostaSugestao(extra: Partial<RespostaSugestao> = {}): RespostaSugestao {
+  return {
+    ativoId: 1,
+    ticker: 'BTC',
+    analiseAtiva: true,
+    precoMercado: { valor: 100_000, instante: INSTANTE, fonte: 'hyperliquid' },
+    definicoes: { capitalUsd: 1000, alavancagemMaxima: 5, riscoPorOperacaoPct: 1 },
+    sugestoes: [sugestaoCarteira()],
+    avisoLegal: LEGAL,
     ...extra,
   };
 }
