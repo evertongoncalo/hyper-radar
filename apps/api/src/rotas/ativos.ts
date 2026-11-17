@@ -84,7 +84,7 @@ export async function validarTickerNaHyperliquid(
  * Preço de mercado para o detalhe: `allMids` da Hyperliquid com tempo máximo; se falhar ou
  * demorar, o último preço gravado num snapshot.
  */
-async function precoMercado(
+export async function precoMercado(
   deps: DependenciasRotas,
   ativo: Ativo,
   snapshots: SnapshotCompleto[],

@@ -21,12 +21,13 @@ export default defineConfig({
         'src/db/migrate.ts',
         'src/db/seed.ts',
       ],
-      // Limiar mínimo aplicado ao cliente Hyperliquid, ao motor e ao serviço de análise.
+      // Limiar mínimo aplicado ao cliente Hyperliquid, ao motor, ao serviço de análise, às rotas e à sugestão proporcional.
       thresholds: {
         'src/hyperliquid/**': limiar,
         'src/motor/**': limiar,
         'src/analise/**': limiar,
         'src/rotas/**': limiar,
+        'src/proporcional/**': limiar,
       },
     },
   },

@@ -15,6 +15,7 @@ import { rotasExportacao } from './rotas/exportacao';
 import { rotasSaude } from './rotas/saude';
 import { instalarSeguranca, type OpcoesSeguranca } from './rotas/seguranca';
 import { rotasStream } from './rotas/stream';
+import { rotasSugestao } from './rotas/sugestao';
 import type { DependenciasRotas, FonteMercadoHyperliquid } from './rotas/tipos';
 
 declare module 'fastify' {
@@ -85,6 +86,7 @@ export function buildApp(opcoes: OpcoesApp) {
       await api.register(rotasEventos(deps));
       await api.register(rotasDefinicoes(deps));
       await api.register(rotasExportacao(deps));
+      await api.register(rotasSugestao(deps));
       await api.register(rotasStream(deps, ligacoesSse));
     },
     { prefix: '/api' },
