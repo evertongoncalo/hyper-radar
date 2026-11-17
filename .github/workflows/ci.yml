@@ -14,6 +14,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  seguranca:
+    name: Auditoria de dependências e verificação de segredos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Só dependências de produção; falha com vulnerabilidades altas ou críticas.
+      - name: Auditoria (npm audit)
+        run: npm audit --omit=dev --audit-level=high
+
+      # Script próprio, sem dependências: não precisa de npm ci.
+      - name: Verificação de segredos
+        run: npm run verificar:segredos
+
   verificar:
     name: Lint, formatação, tipos, testes e build
     runs-on: ubuntu-latest

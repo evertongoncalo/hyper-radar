@@ -25,7 +25,11 @@
     "db:down": "docker compose down",
     "db:generate": "npm run db:generate -w @hyper-radar/api",
     "db:migrate": "npm run db:migrate -w @hyper-radar/api",
-    "db:seed": "npm run db:seed -w @hyper-radar/api"
+    "db:seed": "npm run db:seed -w @hyper-radar/api",
+    "start:local": "node scripts/local.mjs iniciar",
+    "stop:local": "node scripts/local.mjs parar",
+    "status:local": "node scripts/local.mjs estado",
+    "verificar:segredos": "node scripts/verificar-segredos.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
