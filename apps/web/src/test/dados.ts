@@ -4,7 +4,11 @@ import type {
   AtivoResumo,
   CarteiraComAtivosDto,
   CarteiraNoAtivo,
-  DefinicoesDto,
+  DefinicoesComIaDto,
+  EstadoIa,
+  RelatorioIaDto,
+  RespostaAnaliseIa,
+  ResumoRelatorioIa,
   EventoDto,
   PaginaEventosDto,
   RespostaSugestao,
@@ -185,7 +189,7 @@ export function carteiraGlobal(extra: Partial<CarteiraComAtivosDto> = {}): Carte
   };
 }
 
-export function definicoes(extra: Partial<DefinicoesDto> = {}): DefinicoesDto {
+export function definicoes(extra: Partial<DefinicoesComIaDto> = {}): DefinicoesComIaDto {
   return {
     capitalUsd: 1000,
     alavancagemMaxima: 5,
@@ -194,6 +198,7 @@ export function definicoes(extra: Partial<DefinicoesDto> = {}): DefinicoesDto {
     limiteDiarioChamadasIa: 10,
     limiteDiarioTokensIa: 100_000,
     atualizadoEm: INSTANTE,
+    modeloIa: 'gpt-6.1-sol',
     ...extra,
   };
 }
@@ -275,4 +280,83 @@ export function respostaSugestao(extra: Partial<RespostaSugestao> = {}): Respost
     avisoLegal: LEGAL,
     ...extra,
   };
+}
+
+// ------------------------------------------------------------------ Análise IA
+
+export function estadoIaBase(extra: Partial<EstadoIa> = {}): EstadoIa {
+  return {
+    configurada: true,
+    modelo: 'gpt-6.1-sol',
+    modeloComPreco: true,
+    precos: [
+      { modelo: 'gpt-6.1-sol', entradaUsdPorMilhao: 2, saidaUsdPorMilhao: 10 },
+      { modelo: 'gpt-6.1-terra', entradaUsdPorMilhao: 1, saidaUsdPorMilhao: 5 },
+    ],
+    hoje: {
+      dia: '2026-11-17',
+      chamadas: 2,
+      tokens: 12_000,
+      custoEstimadoUsd: 0.05,
+      limiteChamadas: 10,
+      limiteTokens: 100_000,
+    },
+    ...extra,
+  };
+}
+
+export function relatorioIaDto(extra: Partial<RelatorioIaDto> = {}): RelatorioIaDto {
+  return {
+    id: 7,
+    ativoId: 1,
+    modelo: 'gpt-6.1-sol',
+    hashInput: 'abc123',
+    criadoEm: INSTANTE,
+    tokensEntrada: 5_400,
+    tokensSaida: 1_850,
+    custoEstimadoUsd: 0.0293,
+    relatorio: {
+      resumo: 'As baleias seguidas mantêm exposição líquida comprada.',
+      vies: 'alta',
+      confianca: 0.65,
+      alinhamento_baleias: { nivel: 'moderado', descricao: 'Duas de três carteiras em long.' },
+      riscos: ['Funding elevado poderá pressionar posições long.'],
+      niveis_chave: [
+        { preco: 90_000, descricao: 'Suporte (SL agregado)' },
+        { preco: 110_000, descricao: 'Resistência' },
+      ],
+      cenarios: [
+        {
+          nome: 'Continuação',
+          probabilidade: 0.55,
+          descricao: 'Subida gradual.',
+          gatilho: 'Fecho acima de 102 000',
+        },
+      ],
+      cenario_entrada_sugerido: {
+        lado: 'long',
+        entrada: 100_000,
+        stop_loss: 95_000,
+        take_profit: 110_000,
+        justificacao: 'Alinhado com a média de entrada das baleias.',
+      },
+      avisos: ['Esta análise não constitui aconselhamento financeiro; a decisão é sempre sua.'],
+    },
+    ...extra,
+  };
+}
+
+export function respostaAnaliseIa(extra: Partial<RespostaAnaliseIa> = {}): RespostaAnaliseIa {
+  return {
+    relatorio: relatorioIaDto(),
+    daCache: false,
+    custoEstimadoUsd: 0.0293,
+    avisoLegal: LEGAL,
+    ...extra,
+  };
+}
+
+export function resumoRelatorioIa(extra: Partial<ResumoRelatorioIa> = {}): ResumoRelatorioIa {
+  const { relatorio: r, ...resto } = relatorioIaDto();
+  return { ...resto, resumo: r.resumo, vies: r.vies, confianca: r.confianca, ...extra };
 }

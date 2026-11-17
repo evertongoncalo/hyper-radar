@@ -2,6 +2,7 @@ import {
   camposDefinicoesSchema,
   INTERVALO_RECOLHA_MINIMO_S,
   type AlterarDefinicoesPedido,
+  type DefinicoesComIaDto,
   type DefinicoesDto,
 } from '@hyper-radar/shared';
 import { useState, type FormEvent } from 'react';
@@ -14,7 +15,8 @@ import {
   classeCampo,
   Seccao,
 } from '../componentes/comuns';
-import { useAlterarDefinicoes, useDefinicoes } from '../hooks/consultas';
+import { UsoIaHoje } from '../componentes/AnaliseIa';
+import { useAlterarDefinicoes, useDefinicoes, useEstadoIa } from '../hooks/consultas';
 import { usePermissaoNotificacoes, usePreferencias } from '../hooks/locais';
 import { formatarDataHora } from '../lib/formatacao';
 
@@ -68,7 +70,7 @@ export function validarDefinicoes(
   return { ok: true, alteracoes };
 }
 
-function FormularioDefinicoes({ atuais }: { atuais: DefinicoesDto }) {
+function FormularioDefinicoes({ atuais }: { atuais: DefinicoesComIaDto }) {
   const [valores, setValores] = useState<Valores>(
     () => Object.fromEntries(CAMPOS.map(({ campo }) => [campo, String(atuais[campo])])) as Valores,
   );
@@ -136,8 +138,12 @@ function FormularioDefinicoes({ atuais }: { atuais: DefinicoesDto }) {
       </div>
       <div className="flex flex-col gap-1 text-sm">
         <span>Modelo de IA</span>
-        <span className="text-neutral-400">
-          Configurado no servidor; escolha disponível na Fase 6.
+        <span>
+          <strong>{atuais.modeloIa}</strong>{' '}
+          <span className="text-neutral-400">
+            (só de leitura: altere <code>OPENAI_MODEL</code> no ficheiro <code>.env</code> e
+            reinicie o servidor)
+          </span>
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-3">
@@ -214,6 +220,25 @@ function PreferenciasNotificacoes() {
   );
 }
 
+/** Informativo: modelo, preços e uso de hoje (os limites editam-se no formulário acima). */
+function UsoIa() {
+  const estado = useEstadoIa();
+  if (estado.isPending) return <Carregando texto="A carregar uso da IA…" />;
+  if (estado.isError) {
+    return <CaixaErro erro={estado.error} aoRepetir={() => void estado.refetch()} />;
+  }
+  return (
+    <div className="flex flex-col gap-2">
+      {!estado.data.configurada && (
+        <p className="text-sm text-amber-200" role="note">
+          Sem <code>OPENAI_API_KEY</code> configurada: a Análise IA está desativada.
+        </p>
+      )}
+      <UsoIaHoje estado={estado.data} />
+    </div>
+  );
+}
+
 export function Definicoes() {
   const definicoes = useDefinicoes();
   return (
@@ -227,6 +252,9 @@ export function Definicoes() {
         ) : (
           <FormularioDefinicoes atuais={definicoes.data} />
         )}
+      </Seccao>
+      <Seccao titulo="Uso da Análise IA hoje" id="titulo-uso-ia">
+        <UsoIa />
       </Seccao>
       <Seccao titulo="Notificações e som" id="titulo-notificacoes">
         <PreferenciasNotificacoes />

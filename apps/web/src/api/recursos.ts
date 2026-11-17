@@ -5,7 +5,8 @@ import {
   ativoResumoSchema,
   carteiraDtoSchema,
   contagemNaoLidosSchema,
-  definicoesDtoSchema,
+  definicoesComIaDtoSchema,
+  estadoIaSchema,
   eventoLidoRespostaSchema,
   eventosLidosRespostaSchema,
   exportacaoSchema,
@@ -13,6 +14,9 @@ import {
   listaAtivosSchema,
   listaCarteirasSchema,
   paginaEventosSchema,
+  paginaRelatoriosIaSchema,
+  relatorioIaDtoSchema,
+  respostaAnaliseIaSchema,
   respostaSugestaoSchema,
   type AdicionarCarteiraPedido,
   type AlterarCarteiraPedido,
@@ -80,9 +84,23 @@ export const api = {
   marcarEventosDoAtivoLidos: (ativoId: number) =>
     pedirApi(`/ativos/${ativoId}/eventos/lidos`, eventosLidosRespostaSchema, { metodo: 'POST' }),
 
-  obterDefinicoes: () => pedirApi('/definicoes', definicoesDtoSchema),
+  obterDefinicoes: () => pedirApi('/definicoes', definicoesComIaDtoSchema),
   alterarDefinicoes: (pedido: AlterarDefinicoesPedido) =>
-    pedirApi('/definicoes', definicoesDtoSchema, { metodo: 'PATCH', corpo: pedido }),
+    pedirApi('/definicoes', definicoesComIaDtoSchema, { metodo: 'PATCH', corpo: pedido }),
+
+  /** Estado da Análise IA (chave configurada, modelo, preços, uso de hoje); não chama a OpenAI. */
+  obterEstadoIa: () => pedirApi('/ia/estado', estadoIaSchema),
+  /** Única rota que pode chamar a OpenAI: só por ação explícita do utilizador. */
+  analisarComIa: (ativoId: number, forcar: boolean) =>
+    pedirApi(`/ativos/${ativoId}/ia/analise`, respostaAnaliseIaSchema, {
+      metodo: 'POST',
+      corpo: forcar ? { forcar: true } : {},
+    }),
+  listarRelatoriosIa: (ativoId: number, cursor?: number | null) =>
+    pedirApi(`/ativos/${ativoId}/ia/relatorios`, paginaRelatoriosIaSchema, {
+      query: { cursor: cursor ?? undefined, limite: 10 },
+    }),
+  obterRelatorioIa: (id: number) => pedirApi(`/ia/relatorios/${id}`, relatorioIaDtoSchema),
 
   exportar: () => pedirApi('/exportacao', exportacaoSchema),
   importar: (dados: Exportacao) =>
@@ -99,4 +117,7 @@ export const chaves = {
   eventosFiltrados: (f: FiltrosEventos) => ['eventos', f] as const,
   naoLidos: ['nao-lidos'] as const,
   definicoes: ['definicoes'] as const,
+  estadoIa: ['ia-estado'] as const,
+  relatoriosIa: (ativoId: number) => ['ia-relatorios', ativoId] as const,
+  relatorioIa: (id: number) => ['ia-relatorio', id] as const,
 };

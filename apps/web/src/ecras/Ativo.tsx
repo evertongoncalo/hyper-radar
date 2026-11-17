@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react';
 import { Link, useParams } from 'react-router';
 import { mensagemDeErro } from '../api/cliente';
 import { Agregados } from '../componentes/Agregados';
+import { PainelAnaliseIa } from '../componentes/AnaliseIa';
 import { BotaoAnalise } from '../componentes/BotaoAnalise';
 import {
   CaixaErro,
@@ -94,18 +95,6 @@ function SeccaoAgregados({ ativoId }: { ativoId: number }) {
   );
 }
 
-function EmBreve({ titulo, botao }: { titulo: string; botao: string }) {
-  const id = `titulo-${titulo.toLowerCase().replace(/\s+/g, '-')}`;
-  return (
-    <Seccao titulo={titulo} id={id}>
-      <p className="mb-2 text-sm text-neutral-400">Disponível em breve.</p>
-      <button type="button" className={classeBotaoSecundario} disabled>
-        {botao}
-      </button>
-    </Seccao>
-  );
-}
-
 export function Ativo() {
   const { id: param } = useParams();
   const id = Number(param);
@@ -131,11 +120,14 @@ function DetalheAtivo({ id }: { id: number }) {
   const refSugestao = useRef<HTMLDivElement>(null);
   const calcularSugestao = (carteira?: number) => sugestao.mutate(carteira);
   /** Botão "Sugestão" de uma linha: calcula só essa carteira e leva o utilizador ao painel. */
-  const sugestaoDaCarteira = (carteira: number) => {
-    calcularSugestao(carteira);
+  const irParaSugestao = () => {
     const painel = refSugestao.current;
     painel?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
     painel?.focus({ preventScroll: true });
+  };
+  const sugestaoDaCarteira = (carteira: number) => {
+    calcularSugestao(carteira);
+    irParaSugestao();
   };
 
   if (ativo.isPending) return <Carregando texto="A carregar ativo…" />;
@@ -200,7 +192,13 @@ function DetalheAtivo({ id }: { id: number }) {
         </Seccao>
       </div>
 
-      <EmBreve titulo="Análise IA" botao="Pedir análise IA" />
+      <Seccao titulo="Análise IA" id="titulo-analise-ia">
+        <PainelAnaliseIa
+          ativoId={a.id}
+          precoAtual={a.precoMercado?.valor ?? null}
+          aoComparar={irParaSugestao}
+        />
+      </Seccao>
 
       <Feed ativoId={a.id} naoLidos={a.eventosNaoLidos} />
     </div>

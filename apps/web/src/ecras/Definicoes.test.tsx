@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { obterPreferencias } from '../lib/preferencias';
-import { definicoes } from '../test/dados';
+import { definicoes, estadoIaBase } from '../test/dados';
 import { erroApi, mockFetch, renderizarApp, rotasBase } from '../test/utilitarios';
 import { lerNumero, validarDefinicoes } from './Definicoes';
 
@@ -15,6 +15,37 @@ const valores = {
 };
 
 describe('Definições', () => {
+  it('mostra o modelo de IA (modeloIa) e o uso de hoje', async () => {
+    mockFetch([
+      ...rotasBase(),
+      {
+        caminho: '/api/definicoes',
+        resposta: { corpo: definicoes({ modeloIa: 'gpt-6.1-terra' }) },
+      },
+      {
+        caminho: '/api/ia/estado',
+        resposta: { corpo: estadoIaBase({ configurada: false, modelo: 'gpt-6.1-terra' }) },
+      },
+    ]);
+    renderizarApp('/definicoes');
+    expect(await screen.findByText('gpt-6.1-terra', { selector: 'strong' })).toBeInTheDocument();
+    expect(screen.getByText(/altere/).textContent).toContain('OPENAI_MODEL');
+    const uso = screen.getByRole('region', { name: 'Uso da Análise IA hoje' });
+    const texto = (uso.textContent ?? '').replace(/\s/g, ' ');
+    expect(texto).toContain('2 / 10');
+    expect(texto).toContain('1,00 US$ / 5,00 US$');
+    expect(texto).toContain('a Análise IA está desativada');
+  });
+
+  it('erro no estado da IA nas Definições', async () => {
+    mockFetch([
+      ...rotasBase(),
+      { caminho: '/api/ia/estado', resposta: erroApi(500, 'ERRO_INTERNO', 'Falha IA.') },
+    ]);
+    renderizarApp('/definicoes');
+    expect(await screen.findByText('Falha IA.')).toBeInTheDocument();
+  });
+
   it('carregamento e erro', async () => {
     vi.stubGlobal(
       'fetch',

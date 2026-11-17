@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 import { vi } from 'vitest';
+import { estadoIaBase } from './dados';
 import { Aplicacao } from '../App';
 import { ProvedorToasts } from '../componentes/Toasts';
 
@@ -122,8 +123,10 @@ export function rotasBase(): RotaFalsa[] {
           limiteDiarioChamadasIa: 10,
           limiteDiarioTokensIa: 100000,
           atualizadoEm: '2026-11-17T12:00:00.000Z',
+          modeloIa: 'gpt-6.1-sol',
         },
       },
     },
+    { caminho: '/api/ia/estado', resposta: { corpo: estadoIaBase() } },
   ];
 }

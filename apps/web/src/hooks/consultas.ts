@@ -41,6 +41,33 @@ export function useDefinicoes() {
   return useQuery({ queryKey: chaves.definicoes, queryFn: api.obterDefinicoes });
 }
 
+/** Estado da Análise IA (gratuito: só lê a configuração e o uso de hoje). */
+export function useEstadoIa() {
+  return useQuery({ queryKey: chaves.estadoIa, queryFn: api.obterEstadoIa });
+}
+
+/** Histórico de relatórios IA de um ativo; só pede à API quando `ativo` é verdadeiro. */
+export function useRelatoriosIa(ativoId: number, ativo: boolean) {
+  return useInfiniteQuery({
+    queryKey: chaves.relatoriosIa(ativoId),
+    queryFn: ({ pageParam }) => api.listarRelatoriosIa(ativoId, pageParam),
+    initialPageParam: null as number | null,
+    getNextPageParam: (ultima) => ultima.proximoCursor,
+    enabled: ativo,
+  });
+}
+
+/** Relatório IA gravado (`null` = nenhum selecionado, sem pedido). */
+export function useRelatorioIa(id: number | null) {
+  return useQuery({
+    queryKey: chaves.relatorioIa(id ?? 0),
+    queryFn: () => api.obterRelatorioIa(id ?? 0),
+    enabled: id !== null,
+    // Um relatório gravado nunca muda.
+    staleTime: Infinity,
+  });
+}
+
 /** Eventos com paginação por cursor ("carregar mais"). */
 export function useEventos(filtros: FiltrosEventos) {
   return useInfiniteQuery({
@@ -68,6 +95,22 @@ export function useCalcularSugestao(ativoId: number) {
     mutationFn: async (carteira?: number): Promise<CalculoSugestao> => {
       const resposta = await api.obterSugestao(ativoId, carteira);
       return { resposta, carteira, calculadoEm: Date.now() };
+    },
+  });
+}
+
+/**
+ * Análise IA só por clique: é uma mutação (e não uma query) para nunca ser chamada sozinha ao
+ * montar, por invalidações, foco da janela ou eventos SSE. Pode ter custo na OpenAI.
+ */
+export function useAnalisarComIa(ativoId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ forcar }: { forcar: boolean }) => api.analisarComIa(ativoId, forcar),
+    // Uso diário e histórico mudam (mesmo em recusa/resposta inválida os tokens contam).
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: chaves.estadoIa });
+      void qc.invalidateQueries({ queryKey: chaves.relatoriosIa(ativoId) });
     },
   });
 }
