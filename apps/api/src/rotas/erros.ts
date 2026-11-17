@@ -3,6 +3,7 @@ import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { ErroAnalise, type CodigoErroAnalise } from '../analise';
 import { ErroHyperliquid } from '../hyperliquid';
+import { ErroIa, type CodigoErroIa } from '../ia/erros';
 import { ErroRepositorio, type CodigoErroRepositorio } from '../repositorios';
 
 /** Erro com estado HTTP e código da API (mensagem pronta a mostrar, em PT-PT). */
@@ -62,6 +63,17 @@ const ESTADO_ANALISE: Record<CodigoErroAnalise, { estado: number; codigo: Codigo
   ENCERRADO: { estado: 503, codigo: 'SERVICO_INDISPONIVEL' },
 };
 
+const ESTADO_IA: Record<CodigoErroIa, { estado: number; codigo: CodigoErroApi }> = {
+  NAO_CONFIGURADA: { estado: 503, codigo: 'IA_NAO_CONFIGURADA' },
+  LIMITE_DIARIO: { estado: 429, codigo: 'LIMITE_IA_ATINGIDO' },
+  RECUSA: { estado: 502, codigo: 'IA_RECUSA' },
+  RESPOSTA_INVALIDA: { estado: 502, codigo: 'IA_RESPOSTA_INVALIDA' },
+  AUTENTICACAO: { estado: 502, codigo: 'IA_INDISPONIVEL' },
+  LIMITE_OPENAI: { estado: 503, codigo: 'IA_INDISPONIVEL' },
+  INDISPONIVEL: { estado: 503, codigo: 'IA_INDISPONIVEL' },
+  TIMEOUT: { estado: 504, codigo: 'IA_INDISPONIVEL' },
+};
+
 /** Erros do Fastify (parsing do corpo) com mensagem em PT-PT. */
 const ERROS_FASTIFY: Record<string, { estado: number; codigo: CodigoErroApi; mensagem: string }> = {
   FST_ERR_CTP_BODY_TOO_LARGE: {
@@ -110,6 +122,10 @@ export function traduzirErro(erro: unknown): ErroTraduzido {
   }
   if (erro instanceof ErroAnalise) {
     const { estado, codigo } = ESTADO_ANALISE[erro.codigo];
+    return { estado, corpo: corpo(codigo, erro.message) };
+  }
+  if (erro instanceof ErroIa) {
+    const { estado, codigo } = ESTADO_IA[erro.codigo];
     return { estado, corpo: corpo(codigo, erro.message) };
   }
   if (erro instanceof ErroHyperliquid) {

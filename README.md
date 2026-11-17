@@ -18,6 +18,8 @@ cp .env.example .env    # preencher os valores necessários
 docker compose up -d    # Postgres em 127.0.0.1:5432
 ```
 
+A Análise IA (OpenAI, só por clique manual) é opcional: defina `OPENAI_API_KEY` no `.env` (e, se quiser, `OPENAI_MODEL`; omissão `gpt-6.1-sol`). Sem chave, essa função fica indisponível e o resto funciona.
+
 ## Comandos
 
 | Comando                             | Descrição                                      |

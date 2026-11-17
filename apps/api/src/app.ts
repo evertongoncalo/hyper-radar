@@ -4,6 +4,7 @@ import { pino, type Logger } from 'pino';
 import type { ServicoAnalise } from './analise';
 import type { Db } from './db/client';
 import { relogioSistema, type Relogio } from './hyperliquid';
+import { ClienteOpenAi, MODELO_IA_OMISSAO, ServicoIa } from './ia';
 import { rotasAnalise } from './rotas/analise';
 import { rotasAtivos } from './rotas/ativos';
 import { rotasCarteiras } from './rotas/carteiras';
@@ -11,6 +12,7 @@ import { rotasDefinicoes } from './rotas/definicoes';
 import { tratarErro } from './rotas/erros';
 import { instalarFrontend } from './rotas/estatico';
 import { rotasEventos } from './rotas/eventos';
+import { rotasIa } from './rotas/ia';
 import { rotasExportacao } from './rotas/exportacao';
 import { rotasSaude } from './rotas/saude';
 import { instalarSeguranca, type OpcoesSeguranca } from './rotas/seguranca';
@@ -33,6 +35,8 @@ export interface OpcoesApp {
   analise: ServicoAnalise;
   /** Cliente Hyperliquid (validação de tickers e preço de mercado). */
   cliente: FonteMercadoHyperliquid;
+  /** Análise IA; omissão: serviço sem chave (indisponível, 503). */
+  ia?: ServicoIa;
   /** Instância pino a usar; se omitida, a aplicação não regista logs (útil em testes). */
   logger?: Logger;
   /** Relógio do heartbeat SSE e das datas geradas pela API (omissão: sistema). */
@@ -64,6 +68,15 @@ export function buildApp(opcoes: OpcoesApp) {
     heartbeatSseMs: opcoes.heartbeatSseMs ?? 25_000,
   };
 
+  const ia =
+    opcoes.ia ??
+    new ServicoIa({
+      db: opcoes.db,
+      analise: opcoes.analise,
+      gerador: new ClienteOpenAi({ chave: null }),
+      modelo: MODELO_IA_OMISSAO,
+    });
+
   app.decorate('analise', opcoes.analise);
   // Só JSON: sem o parser de text/plain (corpo típico de formulários CSRF "simples").
   app.removeContentTypeParser('text/plain');
@@ -84,9 +97,10 @@ export function buildApp(opcoes: OpcoesApp) {
       await api.register(rotasCarteiras(deps));
       await api.register(rotasAnalise(deps));
       await api.register(rotasEventos(deps));
-      await api.register(rotasDefinicoes(deps));
+      await api.register(rotasDefinicoes(deps, ia.modelo));
       await api.register(rotasExportacao(deps));
       await api.register(rotasSugestao(deps));
+      await api.register(rotasIa(deps, ia));
       await api.register(rotasStream(deps, ligacoesSse));
     },
     { prefix: '/api' },

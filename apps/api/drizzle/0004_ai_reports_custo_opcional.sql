@@ -1,0 +1,1 @@
+ALTER TABLE "ai_reports" ALTER COLUMN "estimated_cost_usd" DROP NOT NULL;

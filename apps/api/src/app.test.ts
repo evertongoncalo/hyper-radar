@@ -91,6 +91,31 @@ describe('carregarConfig', () => {
     );
   });
 
+  it('OpenAI: chave opcional (vazia = null) e modelo por omissão; valores inválidos sem ecoar', () => {
+    expect(carregarConfig(base)).toMatchObject({
+      OPENAI_API_KEY: null,
+      OPENAI_MODEL: 'gpt-6.1-sol',
+    });
+    expect(carregarConfig({ ...base, OPENAI_API_KEY: '  ', OPENAI_MODEL: '' })).toMatchObject({
+      OPENAI_API_KEY: null,
+      OPENAI_MODEL: 'gpt-6.1-sol',
+    });
+    expect(
+      carregarConfig({ ...base, OPENAI_API_KEY: ' sk-x ', OPENAI_MODEL: 'gpt-6.1-terra' }),
+    ).toMatchObject({ OPENAI_API_KEY: 'sk-x', OPENAI_MODEL: 'gpt-6.1-terra' });
+    const erro = (() => {
+      try {
+        carregarConfig({ ...base, OPENAI_API_KEY: 'sk-segredo com espaco' });
+      } catch (e) {
+        return (e as Error).message;
+      }
+      return '';
+    })();
+    expect(erro).toMatch(/OPENAI_API_KEY/);
+    expect(erro).not.toContain('sk-segredo');
+    expect(() => carregarConfig({ ...base, OPENAI_MODEL: 'mau modelo!' })).toThrow(/OPENAI_MODEL/);
+  });
+
   it('exige DATABASE_URL', () => {
     expect(() => carregarConfig({})).toThrow(/DATABASE_URL/);
   });

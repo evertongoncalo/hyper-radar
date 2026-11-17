@@ -42,6 +42,13 @@ export const definicoesDtoSchema = z.object({
 });
 export type DefinicoesDto = z.infer<typeof definicoesDtoSchema>;
 
+/**
+ * Resposta real de `GET/PATCH /api/definicoes`: as definições mais o modelo OpenAI configurado
+ * (`OPENAI_MODEL`, só de leitura). Compatível com `definicoesDtoSchema` (campo extra).
+ */
+export const definicoesComIaDtoSchema = definicoesDtoSchema.extend({ modeloIa: z.string() });
+export type DefinicoesComIaDto = z.infer<typeof definicoesComIaDtoSchema>;
+
 /** `PATCH /api/definicoes`: alteração parcial (campos omitidos mantêm-se). */
 export const alterarDefinicoesPedidoSchema = camposDefinicoesSchema.partial();
 export type AlterarDefinicoesPedido = z.input<typeof alterarDefinicoesPedidoSchema>;

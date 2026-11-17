@@ -7,3 +7,4 @@ export * from './runs';
 export * from './snapshots';
 export * from './eventos';
 export * from './definicoes';
+export * from './relatorios-ia';

@@ -17,7 +17,8 @@ export const aiReports = pgTable(
     response: jsonb('response').$type<Record<string, unknown>>().notNull(),
     inputTokens: integer('input_tokens').notNull(),
     outputTokens: integer('output_tokens').notNull(),
-    estimatedCostUsd: numeric('estimated_cost_usd', { precision: 14, scale: 6 }).notNull(),
+    // `null` quando o modelo não tem preço conhecido (custo por estimar).
+    estimatedCostUsd: numeric('estimated_cost_usd', { precision: 14, scale: 6 }),
     createdAt: criadoEm(),
   },
   (t) => [

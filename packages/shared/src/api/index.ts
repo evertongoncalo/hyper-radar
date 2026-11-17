@@ -8,3 +8,4 @@ export * from './definicoes';
 export * from './exportacao';
 export * from './sse';
 export * from './sugestao';
+export * from './ia';

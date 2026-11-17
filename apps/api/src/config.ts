@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MODELO_IA_OMISSAO } from './ia/custos';
 
 /** Variáveis de ambiente usadas pela API, validadas no arranque. */
 const configSchema = z.object({
@@ -22,6 +23,26 @@ const configSchema = z.object({
         .filter((o) => o !== ''),
     )
     .pipe(z.array(z.url({ protocol: /^https?$/, error: 'ALLOWED_ORIGINS: origem inválida' }))),
+  // Opcional: sem chave, a Análise IA fica indisponível mas a aplicação arranca. Nunca registar.
+  OPENAI_API_KEY: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v === undefined || v === '' ? null : v))
+    .pipe(
+      z.string().regex(/^\S+$/, { error: 'OPENAI_API_KEY não pode conter espaços.' }).nullable(),
+    ),
+  // Vazio = modelo por omissão (validado na página oficial de preços da OpenAI).
+  OPENAI_MODEL: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v === undefined || v === '' ? MODELO_IA_OMISSAO : v))
+    .pipe(
+      z
+        .string()
+        .regex(/^[A-Za-z0-9._:-]{1,100}$/, { error: 'OPENAI_MODEL: nome de modelo inválido.' }),
+    ),
 });
 
 export type Config = z.infer<typeof configSchema>;

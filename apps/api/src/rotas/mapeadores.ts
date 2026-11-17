@@ -3,22 +3,28 @@ import type {
   AgregadosAtivoResposta,
   AtivoResumo,
   CarteiraDto,
+  DefinicoesComIaDto,
   DefinicoesDto,
   EventoDto,
+  RelatorioIaDto,
+  ResumoRelatorioIa,
   SaudeAnaliseDto,
   SseCiclo,
   SseEstadoAtivo,
   UltimoSnapshotDto,
 } from '@hyper-radar/shared';
 import type { AgregadosAtivo, MudancaEstadoAtivo, ResumoCiclo, SaudeAnalise } from '../analise';
+import { relatorioIaSchema } from '@hyper-radar/shared';
 import type { AgregadoAtivo } from '../motor';
 import type {
   Ativo,
   Carteira,
   Definicoes,
   EventoDetalhado,
+  RelatorioIaGravado,
   SnapshotCompleto,
 } from '../repositorios';
+import { ErroApi } from './erros';
 
 /*
  * Conversão domínio → DTOs da API (`@hyper-radar/shared`): datas em ISO 8601, nomes estáveis.
@@ -121,6 +127,42 @@ export function paraDefinicoesDto(d: Definicoes): DefinicoesDto {
     limiteDiarioChamadasIa: d.limiteDiarioChamadasIa,
     limiteDiarioTokensIa: d.limiteDiarioTokensIa,
     atualizadoEm: iso(d.atualizadoEm),
+  };
+}
+
+export function paraDefinicoesComIaDto(d: Definicoes, modeloIa: string): DefinicoesComIaDto {
+  return { ...paraDefinicoesDto(d), modeloIa };
+}
+
+function paraBaseRelatorioIa(r: RelatorioIaGravado) {
+  return {
+    id: r.id,
+    ativoId: r.assetId,
+    modelo: r.modelo,
+    hashInput: r.hashInput,
+    criadoEm: iso(r.criadoEm),
+    tokensEntrada: r.tokensEntrada,
+    tokensSaida: r.tokensSaida,
+    custoEstimadoUsd: r.custoEstimadoUsd,
+  };
+}
+
+/** Relatório gravado → DTO (o JSON gravado é revalidado; nunca devia falhar). */
+export function paraRelatorioIaDto(r: RelatorioIaGravado): RelatorioIaDto {
+  const relatorio = relatorioIaSchema.safeParse(r.resposta);
+  if (!relatorio.success) {
+    throw new ErroApi(500, 'ERRO_INTERNO', `O relatório IA ${r.id} tem um formato inválido.`);
+  }
+  return { ...paraBaseRelatorioIa(r), relatorio: relatorio.data };
+}
+
+export function paraResumoRelatorioIa(r: RelatorioIaGravado): ResumoRelatorioIa {
+  const { relatorio } = paraRelatorioIaDto(r);
+  return {
+    ...paraBaseRelatorioIa(r),
+    resumo: relatorio.resumo,
+    vies: relatorio.vies,
+    confianca: relatorio.confianca,
   };
 }
 

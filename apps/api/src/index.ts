@@ -5,6 +5,7 @@ import { buildApp } from './app';
 import { carregarConfig } from './config';
 import { criarDb } from './db/client';
 import { ClienteHyperliquid } from './hyperliquid';
+import { ClienteOpenAi, ServicoIa } from './ia';
 
 // O servidor escuta apenas em 127.0.0.1: a aplicação é local e não deve ficar exposta na rede.
 const HOST = '127.0.0.1';
@@ -21,10 +22,21 @@ const analise = new ServicoAnalise({
   logger: logger.child({ modulo: 'analise' }),
   diasRetencao: config.SNAPSHOT_RETENTION_DAYS,
 });
+// Análise IA: só por pedido manual (rota POST); sem chave fica indisponível (503).
+const ia = new ServicoIa({
+  db,
+  analise,
+  mercado: cliente,
+  gerador: new ClienteOpenAi({ chave: config.OPENAI_API_KEY }),
+  modelo: config.OPENAI_MODEL,
+  logger: logger.child({ modulo: 'ia' }),
+});
+if (!ia.configurada) logger.info('OPENAI_API_KEY não definida: a Análise IA fica indisponível.');
 const app = buildApp({
   db,
   analise,
   cliente,
+  ia,
   logger,
   seguranca: { porta: config.PORT, origensPermitidas: config.ALLOWED_ORIGINS },
   pastaWeb: PASTA_WEB,
